@@ -1,0 +1,230 @@
+{
+  "_note": "TODO: Verify all MSP figures with official CACP / PIB press releases for 2024-25 / 2025-26. Current figures are marked UNVERIFIED.",
+  "crops": {
+    "rice": {
+      "crop": "Paddy (Common)",
+      "msp_rs_per_quintal": 2300,
+      "season": "Kharif",
+      "year": "2024-25",
+      "type": "official_msp",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://cacp.dacnet.nic.in"
+    },
+    "wheat": {
+      "crop": "Wheat",
+      "msp_rs_per_quintal": 2275,
+      "season": "Rabi",
+      "year": "2024-25",
+      "type": "official_msp",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://cacp.dacnet.nic.in"
+    },
+    "maize": {
+      "crop": "Maize",
+      "msp_rs_per_quintal": 2090,
+      "season": "Kharif",
+      "year": "2024-25",
+      "type": "official_msp",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://cacp.dacnet.nic.in"
+    },
+    "chickpea": {
+      "crop": "Chickpea (Gram)",
+      "msp_rs_per_quintal": 5440,
+      "season": "Rabi",
+      "year": "2024-25",
+      "type": "official_msp",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://cacp.dacnet.nic.in"
+    },
+    "kidneybeans": {
+      "crop": "Kidney Beans (Rajma)",
+      "msp_rs_per_quintal": 7200,
+      "season": "Rabi",
+      "year": "2024-25",
+      "type": "market_estimate",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://agmarknet.gov.in"
+    },
+    "pigeonpeas": {
+      "crop": "Pigeonpeas (Tur/Arhar)",
+      "msp_rs_per_quintal": 7000,
+      "season": "Kharif",
+      "year": "2024-25",
+      "type": "official_msp",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://cacp.dacnet.nic.in"
+    },
+    "mothbeans": {
+      "crop": "Mothbeans",
+      "msp_rs_per_quintal": 6500,
+      "season": "Kharif",
+      "year": "2024-25",
+      "type": "market_estimate",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://agmarknet.gov.in"
+    },
+    "mungbean": {
+      "crop": "Green Gram (Moong)",
+      "msp_rs_per_quintal": 8558,
+      "season": "Kharif",
+      "year": "2024-25",
+      "type": "official_msp",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://cacp.dacnet.nic.in"
+    },
+    "blackgram": {
+      "crop": "Black Gram (Urad)",
+      "msp_rs_per_quintal": 6950,
+      "season": "Kharif",
+      "year": "2024-25",
+      "type": "official_msp",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://cacp.dacnet.nic.in"
+    },
+    "lentil": {
+      "crop": "Lentil (Masoor)",
+      "msp_rs_per_quintal": 6425,
+      "season": "Rabi",
+      "year": "2024-25",
+      "type": "official_msp",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://cacp.dacnet.nic.in"
+    },
+    "pomegranate": {
+      "crop": "Pomegranate",
+      "msp_rs_per_quintal": 6000,
+      "season": "Perennial",
+      "year": "2024-25",
+      "type": "market_estimate",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://agmarknet.gov.in"
+    },
+    "banana": {
+      "crop": "Banana",
+      "msp_rs_per_quintal": 1500,
+      "season": "Perennial",
+      "year": "2024-25",
+      "type": "market_estimate",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://agmarknet.gov.in"
+    },
+    "mango": {
+      "crop": "Mango",
+      "msp_rs_per_quintal": 3500,
+      "season": "Perennial",
+      "year": "2024-25",
+      "type": "market_estimate",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://agmarknet.gov.in"
+    },
+    "grapes": {
+      "crop": "Grapes",
+      "msp_rs_per_quintal": 4500,
+      "season": "Perennial",
+      "year": "2024-25",
+      "type": "market_estimate",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://agmarknet.gov.in"
+    },
+    "watermelon": {
+      "crop": "Watermelon",
+      "msp_rs_per_quintal": 900,
+      "season": "Zaid",
+      "year": "2024-25",
+      "type": "market_estimate",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://agmarknet.gov.in"
+    },
+    "muskmelon": {
+      "crop": "Muskmelon",
+      "msp_rs_per_quintal": 1200,
+      "season": "Zaid",
+      "year": "2024-25",
+      "type": "market_estimate",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://agmarknet.gov.in"
+    },
+    "apple": {
+      "crop": "Apple",
+      "msp_rs_per_quintal": 5000,
+      "season": "Perennial",
+      "year": "2024-25",
+      "type": "market_estimate",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://agmarknet.gov.in"
+    },
+    "orange": {
+      "crop": "Orange",
+      "msp_rs_per_quintal": 3200,
+      "season": "Perennial",
+      "year": "2024-25",
+      "type": "market_estimate",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://agmarknet.gov.in"
+    },
+    "papaya": {
+      "crop": "Papaya",
+      "msp_rs_per_quintal": 1200,
+      "season": "Perennial",
+      "year": "2024-25",
+      "type": "market_estimate",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://agmarknet.gov.in"
+    },
+    "coconut": {
+      "crop": "Coconut",
+      "msp_rs_per_quintal": 3000,
+      "season": "Perennial",
+      "year": "2024-25",
+      "type": "market_estimate",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://agmarknet.gov.in"
+    },
+    "cotton": {
+      "crop": "Cotton (Medium Staple)",
+      "msp_rs_per_quintal": 7122,
+      "season": "Kharif",
+      "year": "2024-25",
+      "type": "official_msp",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://cacp.dacnet.nic.in"
+    },
+    "jute": {
+      "crop": "Raw Jute (TDN-3)",
+      "msp_rs_per_quintal": 5050,
+      "season": "Kharif",
+      "year": "2024-25",
+      "type": "official_msp",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://cacp.dacnet.nic.in"
+    },
+    "coffee": {
+      "crop": "Coffee (Cherry/Parchment)",
+      "msp_rs_per_quintal": 18000,
+      "season": "Perennial",
+      "year": "2024-25",
+      "type": "market_estimate",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://coffeeboard.gov.in"
+    },
+    "chilli": {
+      "crop": "Chilli",
+      "msp_rs_per_quintal": 12000,
+      "season": "Annual",
+      "year": "2024-25",
+      "type": "market_estimate",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://agmarknet.gov.in"
+    },
+    "sugarcane": {
+      "crop": "Sugarcane (FRP benchmark)",
+      "msp_rs_per_quintal": 340,
+      "season": "Annual",
+      "year": "2024-25",
+      "type": "official_msp",
+      "verification_status": "UNVERIFIED",
+      "source_url": "https://pib.gov.in"
+    }
+  }
+}

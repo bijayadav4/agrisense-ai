@@ -1,0 +1,1255 @@
+/* ==========================================================================
+   AgriSense AI — Premium Farmer Interface Styling (Pixel-Perfect Polish)
+   ========================================================================== */
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--bg-app);
+}
+
+/* ==========================================
+   1. Left Sidebar Navigation
+   ========================================== */
+.sidebar {
+  width: 255px;
+  min-width: 255px;
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.sidebar-top {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px;
+  text-decoration: none;
+}
+
+.logo-icon-wrap {
+  width: 44px;
+  height: 44px;
+  background: #eaf6ed;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-green);
+  border: 1px solid #cde8d5;
+  box-shadow: 0 2px 6px rgba(34, 134, 74, 0.08);
+}
+
+.logo-text h1 {
+  font-size: 1.28rem;
+  line-height: 1.1;
+  color: var(--primary-green);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.logo-text span {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  display: block;
+  margin-top: 2px;
+}
+
+/* Sidebar Menu */
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-radius: var(--radius-md);
+  color: #475569;
+  font-size: 0.94rem;
+  font-weight: 600;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sidebar-item:hover:not(.active) {
+  background-color: #f1f6f2;
+  color: var(--primary-green);
+  transform: translateX(2px);
+}
+
+.sidebar-item.active {
+  background-color: var(--primary-green);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(34, 134, 74, 0.28);
+}
+
+.sidebar-item.active svg {
+  color: #ffffff;
+}
+
+
+/* ==========================================
+   2. Main Content Container
+   ========================================== */
+.main-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 28px 40px;
+  max-width: 1320px;
+  gap: 20px;
+  overflow-y: auto;
+}
+
+/* ==========================================
+   3. Top Header Bar
+   ========================================== */
+.top-header {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+}
+
+.header-location {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+}
+
+.header-location:hover {
+  background: #f8faf8;
+  box-shadow: inset 0 0 0 1px #e2e8f0;
+}
+
+.location-icon-wrap {
+  width: 36px;
+  height: 36px;
+  background: #eaf6ed;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-green);
+  border: 1px solid #cde8d5;
+}
+
+.location-text h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.location-text span {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  display: block;
+}
+
+.header-weather-snippet {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 18px;
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  border-radius: var(--radius-full);
+  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.08);
+}
+
+.weather-snippet-icon {
+  color: #f59e0b;
+}
+
+.weather-snippet-temp {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-heading);
+}
+
+.weather-snippet-condition {
+  font-size: 0.78rem;
+  color: #92400e;
+  font-weight: 600;
+}
+
+/* Header Kisan Helpline Badge */
+.header-helpline-section {
+  display: flex;
+  align-items: center;
+}
+
+.kisan-helpline-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  border-radius: var(--radius-full);
+  padding: 6px 18px 6px 8px;
+  text-decoration: none;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(34, 134, 74, 0.08);
+}
+
+.kisan-helpline-badge:hover {
+  background: #dcfce7;
+  border-color: var(--primary-green);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(34, 134, 74, 0.18);
+}
+
+.helpline-icon-circle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--primary-green);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(34, 134, 74, 0.25);
+}
+
+.helpline-text-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.helpline-title {
+  font-size: 0.68rem;
+  color: #15803d;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+}
+
+.helpline-number {
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+
+/* ==========================================
+   4. Today's Farm Advice Hero Banner
+   ========================================== */
+.hero-advice-card {
+  background: var(--bg-banner);
+  border: 1px solid var(--border-banner);
+  border-radius: var(--radius-lg);
+  padding: 22px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(34, 134, 74, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.advice-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.advice-sprout-badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--primary-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(34, 134, 74, 0.28);
+}
+
+.advice-text h2 {
+  font-size: 1.15rem;
+  color: var(--primary-green);
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.advice-headline {
+  font-size: 1.22rem;
+  font-weight: 800;
+  color: var(--text-heading);
+  margin-bottom: 3px;
+}
+
+.advice-desc {
+  font-size: 0.92rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.advice-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.advice-rain-icon {
+  font-size: 2.8rem;
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+.btn-view-advice {
+  background: #ffffff;
+  color: var(--primary-green);
+  border: 1.5px solid var(--primary-green);
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 10px 22px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.btn-view-advice:hover {
+  background: var(--primary-green);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(34, 134, 74, 0.25);
+}
+
+
+/* ==========================================
+   5. Dashboard Grid Cards
+   ========================================== */
+.dashboard-grid-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 20px;
+}
+
+.dashboard-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 22px 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-card:hover {
+  border-color: #d1dfd4;
+}
+
+.card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-title-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title-left h3 {
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.card-action-link {
+  font-size: 0.85rem;
+  color: var(--primary-green);
+  font-weight: 700;
+  text-decoration: none;
+  background: none;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.card-action-link:hover {
+  color: var(--primary-green-hover);
+  text-decoration: underline;
+}
+
+
+/* ==========================================
+   6. Weather Today Card & 5-Day Forecast
+   ========================================== */
+.weather-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.weather-metric-tile {
+  background: #f8faf8;
+  border: 1px solid #eef3ee;
+  border-radius: var(--radius-md);
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.weather-metric-tile:hover {
+  background: #f1f6f2;
+  border-color: #dceade;
+  transform: translateY(-2px);
+}
+
+.metric-icon-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+}
+
+.metric-icon-wrap.red { background: #fef2f2; color: #ef4444; }
+.metric-icon-wrap.blue { background: #eff6ff; color: #3b82f6; }
+.metric-icon-wrap.cyan { background: #ecfeff; color: #06b6d4; }
+.metric-icon-wrap.wind { background: #f0fdf4; color: #10b981; }
+
+.metric-val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-heading);
+}
+
+.metric-lbl {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* 5-Day Forecast Strip */
+.forecast-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 16px;
+}
+
+.forecast-day-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  padding: 6px 4px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s ease;
+}
+
+.forecast-day-tile:hover {
+  background: #f8faf8;
+}
+
+.forecast-day-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.forecast-weather-icon {
+  font-size: 1.5rem;
+}
+
+.forecast-temp-range {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+
+/* ==========================================
+   7. My Farm Overview Card
+   ========================================== */
+.farm-overview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.overview-item-row {
+  background: #f8faf8;
+  border: 1px solid #eef3ee;
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+}
+
+.overview-item-row:hover {
+  background: #ffffff;
+  border-color: #dceade;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.overview-item-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.overview-crop-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.overview-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.overview-col-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.overview-col-val {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--text-heading);
+}
+
+.badge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  margin-top: 2px;
+}
+
+.badge-green {
+  background: #eaf6ed;
+  color: var(--primary-green);
+  border: 1px solid #bde4c8;
+}
+
+.badge-blue {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+
+/* ==========================================
+   8. Quick Actions Card
+   ========================================== */
+.quick-actions-flex {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.action-tile-btn {
+  background: #ffffff;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 18px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.action-tile-btn:hover {
+  border-color: var(--primary-green);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px -4px rgba(34, 134, 74, 0.16);
+}
+
+.action-tile-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.action-tile-icon.green { background: #eaf6ed; color: var(--primary-green); border: 1px solid #cde8d5; }
+.action-tile-icon.purple { background: #f5f3ff; color: #8b5cf6; border: 1px solid #e9d5ff; }
+.action-tile-icon.blue { background: #eff6ff; color: #3b82f6; border: 1px solid #dbeafe; }
+
+.action-tile-label {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+
+/* ==========================================
+   9. Farm Alerts Card
+   ========================================== */
+.alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.alert-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.alert-row.danger {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fee2e2;
+}
+
+.alert-row.warning {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fef3c7;
+}
+
+.alert-row.success {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #dcfce7;
+}
+
+
+/* ==========================================
+   10. Farming Tip Banner
+   ========================================== */
+.farming-tip-card {
+  background: #eaf6ed;
+  border: 1px solid #cde8d5;
+  border-radius: var(--radius-lg);
+  padding: 18px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(34, 134, 74, 0.06);
+}
+
+.tip-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.tip-icon {
+  font-size: 2.2rem;
+}
+
+.tip-text h4 {
+  font-size: 1.02rem;
+  color: var(--primary-green);
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+
+.tip-text p {
+  font-size: 0.92rem;
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.tip-illustration {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 2.5rem;
+}
+
+
+/* ==========================================
+   11. Modal Dialogs & Full View Studios
+   ========================================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content-card {
+  background: #ffffff;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 960px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px 32px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-close-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* Modal Form Styles */
+.modal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 16px;
+}
+
+.modal-title-row h2 {
+  font-size: 1.35rem;
+  color: var(--primary-green);
+}
+
+.form-grid-modal {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-field-white {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-field-white label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  display: flex;
+  justify-content: space-between;
+}
+
+.form-input-white, .form-select-white {
+  padding: 12px 14px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  color: var(--text-heading);
+  background: #ffffff;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.form-input-white:focus, .form-select-white:focus {
+  border-color: var(--primary-green);
+  box-shadow: 0 0 0 3.5px rgba(34, 134, 74, 0.12);
+}
+
+.btn-primary-green {
+  background: var(--primary-green);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 13px 24px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 4px 14px rgba(34, 134, 74, 0.3);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
+}
+
+.btn-primary-green:hover:not(:disabled) {
+  background: var(--primary-green-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(34, 134, 74, 0.35);
+}
+
+.btn-primary-green:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Result Box in Modal */
+.result-box-green {
+  background: #f0faf2;
+  border: 1.5px solid #bde4c8;
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.result-hero-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.result-crop-big {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--primary-green);
+  text-transform: capitalize;
+}
+
+.result-specs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.result-spec-pill {
+  background: #ffffff;
+  border: 1px solid #d4ead9;
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.result-spec-pill span.lbl {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.result-spec-pill span.val {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+/* Preset Chips */
+.preset-chips-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.chip-btn {
+  background: #f8faf8;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-main);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.chip-btn:hover {
+  background: #eaf6ed;
+  border-color: var(--primary-green);
+  color: var(--primary-green);
+  transform: translateY(-1px);
+}
+
+/* ==========================================
+   13. Enterprise Agro Bulletin & Module Launchpads
+   ========================================== */
+.agro-advisory-bulletin {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius-lg);
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.06);
+}
+
+.bulletin-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.bulletin-badge-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #dcfce7;
+  color: #15803d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid #86efac;
+}
+
+.bulletin-tag-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.bulletin-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #16a34a;
+  color: #ffffff;
+}
+
+.bulletin-date {
+  font-size: 0.76rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.bulletin-text {
+  font-size: 0.92rem;
+  color: #1e293b;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.bulletin-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.bulletin-action-btn {
+  background: #ffffff;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.bulletin-action-btn:hover {
+  background: #15803d;
+  color: #ffffff;
+  border-color: #15803d;
+}
+
+/* Landing Modules Grid */
+.landing-modules-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.landing-module-card {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-module-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  border-color: #cbd5e1;
+}
+
+.landing-module-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.landing-module-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.landing-module-icon-wrap.green {
+  background: #eaf6ed;
+  color: #15803d;
+  border: 1px solid #cde8d5;
+}
+
+.landing-module-icon-wrap.purple {
+  background: #f5f3ff;
+  color: #7c3aed;
+  border: 1px solid #ddd6fe;
+}
+
+.landing-module-icon-wrap.blue {
+  background: #f0f9ff;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+}
+
+.landing-status-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.landing-status-badge.purple {
+  background: #f5f3ff;
+  color: #6d28d9;
+}
+
+.landing-status-badge.blue {
+  background: #f0f9ff;
+  color: #0369a1;
+}
+
+.landing-module-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.landing-module-desc {
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.45;
+  margin-bottom: 16px;
+}
+
+.landing-module-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.landing-module-meta {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.landing-cta-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #15803d;
+}
+
+.landing-cta-btn.purple {
+  color: #7c3aed;
+}
+
+.landing-cta-btn.blue {
+  color: #0284c7;
+}
+
+/* Soil Prescription Table */
+.prescription-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin-top: 8px;
+}
+
+.prescription-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 700;
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+
+.prescription-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+  vertical-align: middle;
+}
+
+.prescription-table tr:hover td {
+  background: #f8fafc;
+}
+
+.code-pill {
+  font-family: monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: #f1f5f9;
+  padding: 2px 7px;
+  border-radius: 4px;
+  color: #334155;
+}
+
+.action-link-btn {
+  background: none;
+  border: none;
+  color: #15803d;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s ease;
+}
+
+.action-link-btn:hover {
+  color: #047857;
+  text-decoration: underline;
+}
+
+.farmer-action-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08) !important;
+  border-color: #86efac !important;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .app-layout {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    padding: 16px;
+  }
+  .sidebar-menu {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 8px;
+  }
+  .dashboard-grid-row {
+    grid-template-columns: 1fr;
+  }
+  .top-header {
+    flex-direction: column;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .hero-advice-card {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+}

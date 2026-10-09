@@ -1,0 +1,414 @@
+{
+  "crops": {
+    "rice": {
+      "name": "Paddy (Rice)",
+      "type": "annual",
+      "duration_days": 125,
+      "stage_source": "crop-specific",
+      "stage_split": {
+        "germination": 0.12,
+        "vegetative": 0.36,
+        "flowering": 0.28,
+        "grain_filling": 0.20,
+        "maturity": 0.04
+      },
+      "stage_names": [
+        "Germination & Nursery / Trans seedling",
+        "Active Tillering & Canopy Extension",
+        "Panicle Initiation & Flowering",
+        "Milk to Dough Grain Filling",
+        "Physiological Maturity & Golden Harvest"
+      ],
+      "baseline_yield_q_ha": 48.0,
+      "yield_source": "ICAR-NRRI Cereal Yield Benchmark 2023-24"
+    },
+    "wheat": {
+      "name": "Wheat",
+      "type": "annual",
+      "duration_days": 120,
+      "stage_source": "crop-specific",
+      "stage_split": {
+        "germination": 0.15,
+        "vegetative": 0.35,
+        "flowering": 0.25,
+        "grain_filling": 0.20,
+        "maturity": 0.05
+      },
+      "stage_names": [
+        "Crown Root Initiation (CRI) & Seedling",
+        "Active Tillering & Jointing",
+        "Booting & Heading / Flowering",
+        "Grain Milk & Dough Sizing",
+        "Straw Ripening & Combine Harvest"
+      ],
+      "baseline_yield_q_ha": 42.0,
+      "yield_source": "ICAR-IIWBR Rabi Benchmark 2023-24"
+    },
+    "maize": {
+      "name": "Maize (Corn)",
+      "type": "annual",
+      "duration_days": 105,
+      "stage_source": "crop-specific",
+      "stage_split": {
+        "germination": 0.12,
+        "vegetative": 0.38,
+        "flowering": 0.25,
+        "grain_filling": 0.20,
+        "maturity": 0.05
+      },
+      "stage_names": [
+        "Emergence & V4 Vegetative Node",
+        "Rapid Stem Elongation & V12 Canopy",
+        "Tasseling & Silking Window",
+        "Blister to Dent Kernel Filling",
+        "Black Layer Physiological Maturity"
+      ],
+      "baseline_yield_q_ha": 55.0,
+      "yield_source": "ICAR-IIMR Hybrid Benchmark 2023-24"
+    },
+    "cotton": {
+      "name": "Cotton",
+      "type": "annual",
+      "duration_days": 160,
+      "stage_source": "crop-specific",
+      "stage_split": {
+        "germination": 0.10,
+        "vegetative": 0.35,
+        "flowering": 0.30,
+        "grain_filling": 0.20,
+        "maturity": 0.05
+      },
+      "stage_names": [
+        "Seedling Emergence & Squaring Start",
+        "Monopodial & Sympodial Branching",
+        "Peak White Flower Bloom & Boll Set",
+        "Boll Maturation & Fibre Elongation",
+        "Boll Bursting & Picking Window"
+      ],
+      "baseline_yield_q_ha": 22.0,
+      "yield_source": "ICAR-CICR Cotton Benchmark 2023-24"
+    },
+    "sugarcane": {
+      "name": "Sugarcane",
+      "type": "perennial",
+      "duration_days": 365,
+      "stage_source": "crop-specific",
+      "stage_split": {
+        "germination": 0.12,
+        "vegetative": 0.45,
+        "flowering": 0.25,
+        "grain_filling": 0.15,
+        "maturity": 0.03
+      },
+      "stage_names": [
+        "Bud Sprouting & Primary Tillering",
+        "Grand Growth Phase & Cane Elongation",
+        "Internode Stalk Bulking",
+        "Sucrose Synthesis & Accumulation",
+        "Maturity Testing & Mill Crushing"
+      ],
+      "baseline_yield_q_ha": 750.0,
+      "yield_source": "ICAR-SBI Sugarcane Benchmark 2023-24"
+    },
+    "chickpea": {
+      "name": "Chickpea (Gram)",
+      "type": "annual",
+      "duration_days": 100,
+      "stage_source": "crop-specific",
+      "stage_split": {
+        "germination": 0.15,
+        "vegetative": 0.35,
+        "flowering": 0.25,
+        "grain_filling": 0.20,
+        "maturity": 0.05
+      },
+      "baseline_yield_q_ha": 18.0,
+      "yield_source": "ICAR-IIPR Pulses Benchmark 2023-24"
+    },
+    "kidneybeans": {
+      "name": "Kidney Beans (Rajma)",
+      "type": "annual",
+      "duration_days": 95,
+      "stage_source": "generic",
+      "stage_split": {
+        "germination": 0.15,
+        "vegetative": 0.30,
+        "flowering": 0.30,
+        "grain_filling": 0.20,
+        "maturity": 0.05
+      },
+      "baseline_yield_q_ha": 14.0,
+      "yield_source": "DES Hill Region Pulses Statistics 2023"
+    },
+    "pigeonpeas": {
+      "name": "Pigeonpeas (Tur/Arhar)",
+      "type": "annual",
+      "duration_days": 175,
+      "stage_source": "crop-specific",
+      "stage_split": {
+        "germination": 0.12,
+        "vegetative": 0.40,
+        "flowering": 0.25,
+        "grain_filling": 0.18,
+        "maturity": 0.05
+      },
+      "baseline_yield_q_ha": 16.0,
+      "yield_source": "ICAR-IIPR Pulses Benchmark 2023-24"
+    },
+    "mothbeans": {
+      "name": "Mothbeans",
+      "type": "annual",
+      "duration_days": 80,
+      "stage_source": "generic",
+      "stage_split": {
+        "germination": 0.15,
+        "vegetative": 0.30,
+        "flowering": 0.30,
+        "grain_filling": 0.20,
+        "maturity": 0.05
+      },
+      "baseline_yield_q_ha": 8.0,
+      "yield_source": "CAZRI Arid Zone Statistics 2023"
+    },
+    "mungbean": {
+      "name": "Green Gram (Moong)",
+      "type": "annual",
+      "duration_days": 68,
+      "stage_source": "crop-specific",
+      "stage_split": {
+        "germination": 0.15,
+        "vegetative": 0.30,
+        "flowering": 0.30,
+        "grain_filling": 0.20,
+        "maturity": 0.05
+      },
+      "baseline_yield_q_ha": 10.0,
+      "yield_source": "ICAR-IIPR Short-Duration Benchmark 2023-24"
+    },
+    "blackgram": {
+      "name": "Black Gram (Urad)",
+      "type": "annual",
+      "duration_days": 75,
+      "stage_source": "crop-specific",
+      "stage_split": {
+        "germination": 0.15,
+        "vegetative": 0.30,
+        "flowering": 0.30,
+        "grain_filling": 0.20,
+        "maturity": 0.05
+      },
+      "baseline_yield_q_ha": 11.0,
+      "yield_source": "ICAR-IIPR Pulses Benchmark 2023-24"
+    },
+    "lentil": {
+      "name": "Lentil (Masoor)",
+      "type": "annual",
+      "duration_days": 110,
+      "stage_source": "generic",
+      "stage_split": {
+        "germination": 0.15,
+        "vegetative": 0.30,
+        "flowering": 0.30,
+        "grain_filling": 0.20,
+        "maturity": 0.05
+      },
+      "baseline_yield_q_ha": 14.0,
+      "yield_source": "ICAR Pulses Statistics 2023"
+    },
+    "pomegranate": {
+      "name": "Pomegranate",
+      "type": "perennial",
+      "duration_days": 150,
+      "stage_source": "generic",
+      "stage_split": {
+        "germination": 0.15,
+        "vegetative": 0.30,
+        "flowering": 0.30,
+        "grain_filling": 0.20,
+        "maturity": 0.05
+      },
+      "baseline_yield_q_ha": 110.0,
+      "yield_source": "National Horticulture Board 2023-24"
+    },
+    "banana": {
+      "name": "Banana",
+      "type": "perennial",
+      "duration_days": 330,
+      "stage_source": "generic",
+      "stage_split": {
+        "germination": 0.15,
+        "vegetative": 0.40,
+        "flowering": 0.25,
+        "grain_filling": 0.15,
+        "maturity": 0.05
+      },
+      "baseline_yield_q_ha": 380.0,
+      "yield_source": "ICAR-NRCB Horticulture Benchmark 2023-24"
+    },
+    "mango": {
+      "name": "Mango",
+      "type": "perennial",
+      "duration_days": 120,
+      "stage_source": "generic",
+      "stage_split": {
+        "germination": 0.15,
+        "vegetative": 0.30,
+        "flowering": 0.30,
+        "grain_filling": 0.20,
+        "maturity": 0.05
+      },
+      "baseline_yield_q_ha": 85.0,
+      "yield_source": "National Horticulture Board 2023-24"
+    },
+    "grapes": {
+      "name": "Grapes",
+      "type": "perennial",
+      "duration_days": 135,
+      "stage_source": "generic",
+      "stage_split": {
+        "germination": 0.15,
+        "vegetative": 0.30,
+        "flowering": 0.30,
+        "grain_filling": 0.20,
+        "maturity": 0.05
+      },
+      "baseline_yield_q_ha": 220.0,
+      "yield_source": "ICAR-NRCG Horticulture Benchmark 2023-24"
+    },
+    "watermelon": {
+      "name": "Watermelon",
+      "type": "annual",
+      "duration_days": 85,
+      "stage_source": "generic",
+      "stage_split": {
+        "germination": 0.15,
+        "vegetative": 0.30,
+        "flowering": 0.30,
+        "grain_filling": 0.20,
+        "maturity": 0.05
+      },
+      "baseline_yield_q_ha": 280.0,
+      "yield_source": "Indian Vegetable Statistics 2023"
+    },
+    "muskmelon": {
+      "name": "Muskmelon",
+      "type": "annual",
+      "duration_days": 75,
+      "stage_source": "generic",
+      "stage_split": {
+        "germination": 0.15,
+        "vegetative": 0.30,
+        "flowering": 0.30,
+        "grain_filling": 0.20,
+        "maturity": 0.05
+      },
+      "baseline_yield_q_ha": 190.0,
+      "yield_source": "Indian Vegetable Statistics 2023"
+    },
+    "apple": {
+      "name": "Apple",
+      "type": "perennial",
+      "duration_days": 140,
+      "stage_source": "generic",
+      "stage_split": {
+        "germination": 0.15,
+        "vegetative": 0.30,
+        "flowering": 0.30,
+        "grain_filling": 0.20,
+        "maturity": 0.05
+      },
+      "baseline_yield_q_ha": 130.0,
+      "yield_source": "National Horticulture Board 2023-24"
+    },
+    "orange": {
+      "name": "Orange (Citrus)",
+      "type": "perennial",
+      "duration_days": 240,
+      "stage_source": "generic",
+      "stage_split": {
+        "germination": 0.15,
+        "vegetative": 0.30,
+        "flowering": 0.30,
+        "grain_filling": 0.20,
+        "maturity": 0.05
+      },
+      "baseline_yield_q_ha": 140.0,
+      "yield_source": "ICAR-CCRI Citrus Benchmark 2023-24"
+    },
+    "papaya": {
+      "name": "Papaya",
+      "type": "perennial",
+      "duration_days": 270,
+      "stage_source": "generic",
+      "stage_split": {
+        "germination": 0.15,
+        "vegetative": 0.30,
+        "flowering": 0.30,
+        "grain_filling": 0.20,
+        "maturity": 0.05
+      },
+      "baseline_yield_q_ha": 450.0,
+      "yield_source": "National Horticulture Board 2023-24"
+    },
+    "coconut": {
+      "name": "Coconut",
+      "type": "perennial",
+      "duration_days": 365,
+      "stage_source": "generic",
+      "stage_split": {
+        "germination": 0.15,
+        "vegetative": 0.30,
+        "flowering": 0.30,
+        "grain_filling": 0.20,
+        "maturity": 0.05
+      },
+      "baseline_yield_q_ha": 90.0,
+      "yield_source": "Coconut Development Board Statistics 2023"
+    },
+    "jute": {
+      "name": "Jute",
+      "type": "annual",
+      "duration_days": 120,
+      "stage_source": "generic",
+      "stage_split": {
+        "germination": 0.15,
+        "vegetative": 0.35,
+        "flowering": 0.30,
+        "grain_filling": 0.15,
+        "maturity": 0.05
+      },
+      "baseline_yield_q_ha": 28.0,
+      "yield_source": "ICAR-CRIJAF Bast Fibre Benchmark 2023-24"
+    },
+    "coffee": {
+      "name": "Coffee",
+      "type": "perennial",
+      "duration_days": 210,
+      "stage_source": "generic",
+      "stage_split": {
+        "germination": 0.15,
+        "vegetative": 0.30,
+        "flowering": 0.30,
+        "grain_filling": 0.20,
+        "maturity": 0.05
+      },
+      "baseline_yield_q_ha": 15.0,
+      "yield_source": "Coffee Board of India Research Report 2023"
+    },
+    "chilli": {
+      "name": "Chilli",
+      "type": "annual",
+      "duration_days": 150,
+      "stage_source": "generic",
+      "stage_split": {
+        "germination": 0.15,
+        "vegetative": 0.30,
+        "flowering": 0.30,
+        "grain_filling": 0.20,
+        "maturity": 0.05
+      },
+      "baseline_yield_q_ha": 25.0,
+      "yield_source": "Spices Board Statistics 2023"
+    }
+  }
+}

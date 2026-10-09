@@ -1,0 +1,117 @@
+{
+  "rice": {
+    "season_name": "Kharif (Monsoon) / Summer Boro",
+    "suitable_months": [5, 6, 7, 8, 9, 10, 11, 12, 1],
+    "notes": "Mainly Kharif nursery raising in May-July, transplanting June-August. Also sown as Boro rice in Nov-Jan in Eastern India."
+  },
+  "wheat": {
+    "season_name": "Rabi (Winter)",
+    "suitable_months": [10, 11, 12, 1, 2, 3],
+    "notes": "Staple Rabi cereal. Optimal sowing in Indo-Gangetic Plains between late October and late November. Harvesting March-April."
+  },
+  "maize": {
+    "season_name": "Kharif & Rabi",
+    "suitable_months": [5, 6, 7, 10, 11, 12],
+    "notes": "Predominantly Kharif (sown June-July with monsoon onset), also grown as Rabi corn in Peninsular India (sown Oct-Nov)."
+  },
+  "chickpea": {
+    "season_name": "Rabi (Winter Pulse)",
+    "suitable_months": [10, 11, 12, 1, 2, 3],
+    "notes": "Primary Rabi cool-season pulse. Optimal sowing October-November; terminal drought sensitive in February-March."
+  },
+  "kidneybeans": {
+    "season_name": "Kharif (Hills) & Spring/Rabi (Plains)",
+    "suitable_months": [4, 5, 6, 7, 10, 11],
+    "notes": "Grown in Himalayan hills during Kharif (May-July) and in North-Eastern plains as early winter pulse (Oct-Nov)."
+  },
+  "pigeonpeas": {
+    "season_name": "Kharif (Long Duration Pulse)",
+    "suitable_months": [5, 6, 7, 8, 9, 10, 11, 12, 1],
+    "notes": "Arhar/Tur is sown with first monsoon showers in June-July. Maturity takes 150-200 days, harvesting December-January."
+  },
+  "mothbeans": {
+    "season_name": "Kharif (Arid)",
+    "suitable_months": [6, 7, 8, 9, 10],
+    "notes": "Highly drought-tolerant arid legume grown primarily in Rajasthan/Gujarat. Sown July with monsoon onset, harvested Oct."
+  },
+  "mungbean": {
+    "season_name": "Kharif & Zaid (Summer)",
+    "suitable_months": [2, 3, 4, 6, 7, 8],
+    "notes": "Short duration 60-day pulse. Sown in Zaid (March-April) after Rabi harvest, and in Kharif (June-July)."
+  },
+  "blackgram": {
+    "season_name": "Kharif & Rabi (Rice Fallow)",
+    "suitable_months": [6, 7, 8, 9, 10, 11, 12],
+    "notes": "Urad pulse is sown in Kharif (June-July) across Central India, and in coastal rice-fallow Rabi (Nov-Dec)."
+  },
+  "lentil": {
+    "season_name": "Rabi (Winter Pulse)",
+    "suitable_months": [10, 11, 12, 1, 2, 3],
+    "notes": "Masoor pulse is sown late October to mid-November across UP, MP, and Bihar; harvested February-March."
+  },
+  "pomegranate": {
+    "season_name": "Perennial (Ambe / Mrig / Hasta Bahar)",
+    "suitable_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    "notes": "Perennial orchard crop. Managed via regulated flowering flushes (Mrig Bahar in June, Hasta in Sept, Ambe in Jan)."
+  },
+  "banana": {
+    "season_name": "Year-Round (Semi-Perennial)",
+    "suitable_months": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+    "notes": "Tissue culture suckers planted in Spring (Feb-March) or Monsoon (June-July). Avoid severe winter frost periods."
+  },
+  "mango": {
+    "season_name": "Perennial (Monsoon Planting, Summer Harvest)",
+    "suitable_months": [6, 7, 8, 9],
+    "notes": "Orchard establishment ideal during monsoon (July-August). Fruit harvest spans March to July."
+  },
+  "grapes": {
+    "season_name": "Perennial (Bi-annual Pruning)",
+    "suitable_months": [9, 10, 11, 12, 1, 2, 3, 4],
+    "notes": "Foundation pruning in April, forward pruning for fruit development in October. Harvest February-April."
+  },
+  "watermelon": {
+    "season_name": "Zaid (Summer Crop)",
+    "suitable_months": [1, 2, 3, 4, 5],
+    "notes": "Warm season cucurbit. Best sown in late winter / early summer (January-March) for peak harvest before monsoon."
+  },
+  "muskmelon": {
+    "season_name": "Zaid (Summer Crop)",
+    "suitable_months": [1, 2, 3, 4, 5],
+    "notes": "Summer cucurbit. Ideal sowing January to March. High heat and dry sunny weather needed for sugar accumulation."
+  },
+  "apple": {
+    "season_name": "Temperate Perennial",
+    "suitable_months": [11, 12, 1, 2, 3],
+    "notes": "Temperate tree fruit requiring chilling hours (>800 hours <7°C). Dormant bareroot planting December-February."
+  },
+  "orange": {
+    "season_name": "Subtropical Perennial",
+    "suitable_months": [6, 7, 8, 9],
+    "notes": "Mandarin/Mosambi citrus orchard planting during active monsoon (July-September)."
+  },
+  "papaya": {
+    "season_name": "Semi-Perennial / Year-Round",
+    "suitable_months": [2, 3, 4, 6, 7, 8, 9, 10],
+    "notes": "Fast-growing fruit. Transplant seedlings in Spring (Feb-March) or Monsoon (July-August)."
+  },
+  "coconut": {
+    "season_name": "Perennial Plantation",
+    "suitable_months": [5, 6, 7, 8, 9, 10],
+    "notes": "Long-lived coastal palm. Seedling pit transplanting recommended with South-West monsoon onset (May-September)."
+  },
+  "cotton": {
+    "season_name": "Kharif (Commercial Fiber)",
+    "suitable_months": [4, 5, 6, 7],
+    "notes": "Sown April-May (irrigated North India) or June-July with monsoon onset (rainfed Central/South India). Harvest Oct-Dec."
+  },
+  "jute": {
+    "season_name": "Kharif (Pre-Monsoon Commercial Fiber)",
+    "suitable_months": [3, 4, 5, 6],
+    "notes": "Sown March to May with pre-monsoon showers in Bengal and Assam; harvested 120 days later at flower initiation."
+  },
+  "coffee": {
+    "season_name": "Perennial Shade Plantation",
+    "suitable_months": [6, 7, 8, 9, 10],
+    "notes": "Shade-loving plantation shrub in Western Ghats. Transplanting during monsoon (June-August). Harvest Nov-Feb."
+  }
+}

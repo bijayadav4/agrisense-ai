@@ -1,0 +1,441 @@
+{
+  "crops": {
+    "rice": {
+      "name": "Paddy / Rice",
+      "kc": {
+        "initial": 1.05,
+        "vegetative": 1.15,
+        "flowering": 1.25,
+        "ripening": 0.95
+      },
+      "source": "FAO-56",
+      "rooting_depth_m": 0.6,
+      "mad": 0.20,
+      "default_drip": {
+        "emitter_lph": 2.0,
+        "emitter_spacing_m": 0.3,
+        "lateral_spacing_m": 0.6
+      }
+    },
+    "wheat": {
+      "name": "Wheat",
+      "kc": {
+        "initial": 0.40,
+        "vegetative": 0.80,
+        "flowering": 1.15,
+        "ripening": 0.35
+      },
+      "source": "FAO-56",
+      "rooting_depth_m": 1.0,
+      "mad": 0.55,
+      "default_drip": {
+        "emitter_lph": 2.0,
+        "emitter_spacing_m": 0.3,
+        "lateral_spacing_m": 0.6
+      }
+    },
+    "maize": {
+      "name": "Maize (Corn)",
+      "kc": {
+        "initial": 0.40,
+        "vegetative": 0.80,
+        "flowering": 1.20,
+        "ripening": 0.45
+      },
+      "source": "FAO-56",
+      "rooting_depth_m": 1.2,
+      "mad": 0.55,
+      "default_drip": {
+        "emitter_lph": 2.0,
+        "emitter_spacing_m": 0.4,
+        "lateral_spacing_m": 0.75
+      }
+    },
+    "cotton": {
+      "name": "Cotton",
+      "kc": {
+        "initial": 0.45,
+        "vegetative": 0.75,
+        "flowering": 1.15,
+        "ripening": 0.65
+      },
+      "source": "FAO-56",
+      "rooting_depth_m": 1.2,
+      "mad": 0.65,
+      "default_drip": {
+        "emitter_lph": 2.4,
+        "emitter_spacing_m": 0.5,
+        "lateral_spacing_m": 1.0
+      }
+    },
+    "sugarcane": {
+      "name": "Sugarcane",
+      "kc": {
+        "initial": 0.50,
+        "vegetative": 0.90,
+        "flowering": 1.25,
+        "ripening": 0.75
+      },
+      "source": "FAO-56",
+      "rooting_depth_m": 1.5,
+      "mad": 0.65,
+      "default_drip": {
+        "emitter_lph": 4.0,
+        "emitter_spacing_m": 0.5,
+        "lateral_spacing_m": 1.5
+      }
+    },
+    "chickpea": {
+      "name": "Chickpea (Gram)",
+      "kc": {
+        "initial": 0.40,
+        "vegetative": 0.70,
+        "flowering": 1.00,
+        "ripening": 0.35
+      },
+      "source": "FAO-56",
+      "rooting_depth_m": 0.8,
+      "mad": 0.50,
+      "default_drip": {
+        "emitter_lph": 2.0,
+        "emitter_spacing_m": 0.3,
+        "lateral_spacing_m": 0.6
+      }
+    },
+    "pigeonpeas": {
+      "name": "Pigeonpeas (Tur/Arhar)",
+      "kc": {
+        "initial": 0.40,
+        "vegetative": 0.70,
+        "flowering": 1.05,
+        "ripening": 0.40
+      },
+      "source": "FAO-56",
+      "rooting_depth_m": 1.2,
+      "mad": 0.55,
+      "default_drip": {
+        "emitter_lph": 2.0,
+        "emitter_spacing_m": 0.4,
+        "lateral_spacing_m": 0.9
+      }
+    },
+    "kidneybeans": {
+      "name": "Kidney Beans (Rajma)",
+      "kc": {
+        "initial": 0.45,
+        "vegetative": 0.75,
+        "flowering": 1.05,
+        "ripening": 0.40
+      },
+      "source": "FAO-56",
+      "rooting_depth_m": 0.7,
+      "mad": 0.45,
+      "default_drip": {
+        "emitter_lph": 2.0,
+        "emitter_spacing_m": 0.3,
+        "lateral_spacing_m": 0.6
+      }
+    },
+    "mothbeans": {
+      "name": "Mothbeans",
+      "kc": {
+        "initial": 0.35,
+        "vegetative": 0.60,
+        "flowering": 0.85,
+        "ripening": 0.30
+      },
+      "source": "estimated",
+      "rooting_depth_m": 0.6,
+      "mad": 0.55,
+      "default_drip": {
+        "emitter_lph": 2.0,
+        "emitter_spacing_m": 0.3,
+        "lateral_spacing_m": 0.5
+      }
+    },
+    "mungbean": {
+      "name": "Green Gram (Moong)",
+      "kc": {
+        "initial": 0.40,
+        "vegetative": 0.70,
+        "flowering": 1.00,
+        "ripening": 0.35
+      },
+      "source": "FAO-56",
+      "rooting_depth_m": 0.6,
+      "mad": 0.50,
+      "default_drip": {
+        "emitter_lph": 2.0,
+        "emitter_spacing_m": 0.3,
+        "lateral_spacing_m": 0.5
+      }
+    },
+    "blackgram": {
+      "name": "Black Gram (Urad)",
+      "kc": {
+        "initial": 0.40,
+        "vegetative": 0.70,
+        "flowering": 1.00,
+        "ripening": 0.35
+      },
+      "source": "FAO-56",
+      "rooting_depth_m": 0.6,
+      "mad": 0.50,
+      "default_drip": {
+        "emitter_lph": 2.0,
+        "emitter_spacing_m": 0.3,
+        "lateral_spacing_m": 0.5
+      }
+    },
+    "lentil": {
+      "name": "Lentil (Masoor)",
+      "kc": {
+        "initial": 0.40,
+        "vegetative": 0.70,
+        "flowering": 1.00,
+        "ripening": 0.35
+      },
+      "source": "FAO-56",
+      "rooting_depth_m": 0.7,
+      "mad": 0.50,
+      "default_drip": {
+        "emitter_lph": 2.0,
+        "emitter_spacing_m": 0.3,
+        "lateral_spacing_m": 0.5
+      }
+    },
+    "pomegranate": {
+      "name": "Pomegranate",
+      "kc": {
+        "initial": 0.50,
+        "vegetative": 0.75,
+        "flowering": 0.95,
+        "ripening": 0.65
+      },
+      "source": "estimated",
+      "rooting_depth_m": 1.4,
+      "mad": 0.50,
+      "default_drip": {
+        "emitter_lph": 4.0,
+        "emitter_spacing_m": 0.8,
+        "lateral_spacing_m": 3.0
+      }
+    },
+    "banana": {
+      "name": "Banana",
+      "kc": {
+        "initial": 0.60,
+        "vegetative": 1.00,
+        "flowering": 1.20,
+        "ripening": 1.00
+      },
+      "source": "FAO-56",
+      "rooting_depth_m": 0.9,
+      "mad": 0.35,
+      "default_drip": {
+        "emitter_lph": 4.0,
+        "emitter_spacing_m": 0.6,
+        "lateral_spacing_m": 1.8
+      }
+    },
+    "mango": {
+      "name": "Mango",
+      "kc": {
+        "initial": 0.60,
+        "vegetative": 0.75,
+        "flowering": 0.90,
+        "ripening": 0.70
+      },
+      "source": "FAO-56",
+      "rooting_depth_m": 1.8,
+      "mad": 0.50,
+      "default_drip": {
+        "emitter_lph": 8.0,
+        "emitter_spacing_m": 1.0,
+        "lateral_spacing_m": 5.0
+      }
+    },
+    "grapes": {
+      "name": "Grapes",
+      "kc": {
+        "initial": 0.35,
+        "vegetative": 0.65,
+        "flowering": 0.85,
+        "ripening": 0.45
+      },
+      "source": "FAO-56",
+      "rooting_depth_m": 1.5,
+      "mad": 0.45,
+      "default_drip": {
+        "emitter_lph": 4.0,
+        "emitter_spacing_m": 0.5,
+        "lateral_spacing_m": 2.5
+      }
+    },
+    "watermelon": {
+      "name": "Watermelon",
+      "kc": {
+        "initial": 0.45,
+        "vegetative": 0.75,
+        "flowering": 1.00,
+        "ripening": 0.75
+      },
+      "source": "FAO-56",
+      "rooting_depth_m": 1.0,
+      "mad": 0.45,
+      "default_drip": {
+        "emitter_lph": 2.0,
+        "emitter_spacing_m": 0.4,
+        "lateral_spacing_m": 1.5
+      }
+    },
+    "muskmelon": {
+      "name": "Muskmelon",
+      "kc": {
+        "initial": 0.45,
+        "vegetative": 0.75,
+        "flowering": 1.00,
+        "ripening": 0.75
+      },
+      "source": "FAO-56",
+      "rooting_depth_m": 1.0,
+      "mad": 0.45,
+      "default_drip": {
+        "emitter_lph": 2.0,
+        "emitter_spacing_m": 0.4,
+        "lateral_spacing_m": 1.5
+      }
+    },
+    "apple": {
+      "name": "Apple",
+      "kc": {
+        "initial": 0.50,
+        "vegetative": 0.80,
+        "flowering": 1.05,
+        "ripening": 0.70
+      },
+      "source": "FAO-56",
+      "rooting_depth_m": 1.4,
+      "mad": 0.50,
+      "default_drip": {
+        "emitter_lph": 4.0,
+        "emitter_spacing_m": 0.8,
+        "lateral_spacing_m": 3.5
+      }
+    },
+    "orange": {
+      "name": "Orange (Citrus)",
+      "kc": {
+        "initial": 0.60,
+        "vegetative": 0.70,
+        "flowering": 0.75,
+        "ripening": 0.70
+      },
+      "source": "FAO-56",
+      "rooting_depth_m": 1.2,
+      "mad": 0.50,
+      "default_drip": {
+        "emitter_lph": 4.0,
+        "emitter_spacing_m": 0.8,
+        "lateral_spacing_m": 4.0
+      }
+    },
+    "papaya": {
+      "name": "Papaya",
+      "kc": {
+        "initial": 0.55,
+        "vegetative": 0.85,
+        "flowering": 1.10,
+        "ripening": 0.85
+      },
+      "source": "estimated",
+      "rooting_depth_m": 0.9,
+      "mad": 0.40,
+      "default_drip": {
+        "emitter_lph": 4.0,
+        "emitter_spacing_m": 0.5,
+        "lateral_spacing_m": 2.0
+      }
+    },
+    "coconut": {
+      "name": "Coconut",
+      "kc": {
+        "initial": 0.80,
+        "vegetative": 0.80,
+        "flowering": 0.80,
+        "ripening": 0.80
+      },
+      "source": "estimated",
+      "rooting_depth_m": 1.5,
+      "mad": 0.60,
+      "default_drip": {
+        "emitter_lph": 8.0,
+        "emitter_spacing_m": 1.0,
+        "lateral_spacing_m": 7.0
+      }
+    },
+    "jute": {
+      "name": "Jute",
+      "kc": {
+        "initial": 0.50,
+        "vegetative": 0.95,
+        "flowering": 1.15,
+        "ripening": 0.65
+      },
+      "source": "estimated",
+      "rooting_depth_m": 0.9,
+      "mad": 0.50,
+      "default_drip": {
+        "emitter_lph": 2.0,
+        "emitter_spacing_m": 0.3,
+        "lateral_spacing_m": 0.5
+      }
+    },
+    "coffee": {
+      "name": "Coffee",
+      "kc": {
+        "initial": 0.90,
+        "vegetative": 0.95,
+        "flowering": 1.05,
+        "ripening": 0.95
+      },
+      "source": "FAO-56",
+      "rooting_depth_m": 1.4,
+      "mad": 0.50,
+      "default_drip": {
+        "emitter_lph": 4.0,
+        "emitter_spacing_m": 0.6,
+        "lateral_spacing_m": 2.5
+      }
+    },
+    "chilli": {
+      "name": "Chilli (Pepper)",
+      "kc": {
+        "initial": 0.40,
+        "vegetative": 0.75,
+        "flowering": 1.05,
+        "ripening": 0.80
+      },
+      "source": "FAO-56",
+      "rooting_depth_m": 0.8,
+      "mad": 0.40,
+      "default_drip": {
+        "emitter_lph": 2.0,
+        "emitter_spacing_m": 0.3,
+        "lateral_spacing_m": 0.8
+      }
+    }
+  },
+  "soil_properties": {
+    "Clayey": { "awc_mm_per_m": 170, "label": "Clayey Soil" },
+    "Black": { "awc_mm_per_m": 160, "label": "Black / Vertisol Soil" },
+    "Loamy": { "awc_mm_per_m": 140, "label": "Loamy Soil" },
+    "Red": { "awc_mm_per_m": 110, "label": "Red / Alfisol Soil" },
+    "Sandy": { "awc_mm_per_m": 70, "label": "Sandy Soil" }
+  },
+  "irrigation_efficiencies": {
+    "drip": 0.90,
+    "sprinkler": 0.75,
+    "flood": 0.60
+  }
+}
