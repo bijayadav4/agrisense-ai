@@ -613,6 +613,30 @@ class SoilFlowAuditTestCase(unittest.TestCase):
         # Assert yield values are different
         self.assertNotEqual("38.8", "22.7")
 
+    def test_muskmelon_top1_yield_and_msp_not_applicable(self):
+        """STEP 4: Muskmelon / non-MSP crops:
+        - When Muskmelon is top-1: yield displays 'Not applicable (no official yield/MSP benchmark)'
+        - Muskmelon 190 Q/ha benchmark is removed and not rendered
+        - MSP displays 'Not applicable (no official yield/MSP benchmark)'
+        """
+        payload_muskmelon = {
+            "farmer_name": "Test Farmer",
+            "location": "Nashik, Maharashtra",
+            "area": 2.0,
+            "area_unit": "Acres",
+            "crop_data": {
+                "crop": "Muskmelon",
+                "top_crops": [{"rank": 1, "crop": "Muskmelon", "probability": 0.85}],
+            },
+        }
+        res = self.client.post("/api/report/generate", json=payload_muskmelon)
+        self.assertEqual(res.status_code, 200)
+        text = "".join([p.extract_text() for p in PdfReader(io.BytesIO(res.data)).pages])
+        self.assertIn("Not applicable", text)
+        self.assertIn("no official yield/MSP", text)
+        self.assertNotIn("190", text)
+        self.assertNotIn("153.8", text)
+
     def test_weather_location_coordinate_mismatch_warning(self):
         """Location mismatch test:
         - Haversine distance threshold 50 km.

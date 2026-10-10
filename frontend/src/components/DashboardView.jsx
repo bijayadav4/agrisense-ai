@@ -91,12 +91,13 @@ export default function DashboardView({
           weekly_schedule: weeklySchedule
         },
         harvest_data: {
-          harvest_date: harvestInfo?.harvest_date_formatted || harvestInfo?.expected_harvest_date || "Indicative Calendar Projection",
-          days_remaining: harvestInfo?.days_remaining !== undefined ? harvestInfo.days_remaining : 70,
-          yield_quintals: harvestInfo?.yield_prediction?.total_expected_quintals || 38.9,
-          msp_year: harvestInfo?.msp_info?.year || "2024-25",
-          msp_rs_per_quintal: harvestInfo?.msp_info?.rate_rs_per_quintal || 2300,
-          msp_type: harvestInfo?.msp_info?.verification_status || "UNVERIFIED (Pending Official Gazette)"
+          crop: recommendation?.crop || null,
+          harvest_date: harvestInfo?.harvest_date_formatted || harvestInfo?.expected_harvest_date || null,
+          days_remaining: harvestInfo?.days_remaining !== undefined ? harvestInfo.days_remaining : null,
+          yield_quintals: harvestInfo?.yield_prediction?.total_expected_quintals || null,
+          msp_year: harvestInfo?.msp_info?.year || null,
+          msp_rs_per_quintal: harvestInfo?.msp_info?.rate_rs_per_quintal || null,
+          msp_type: harvestInfo?.msp_info?.verification_status || null
         }
       };
 

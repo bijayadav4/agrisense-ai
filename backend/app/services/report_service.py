@@ -860,36 +860,39 @@ def generate_farmer_report_card(data):
     crop_cycle_entry = CROP_CYCLES_LOOKUP.get(target_crop, {})
     msp_entry = MSP_LOOKUP.get(target_crop, {})
 
-    if harvest_data.get("yield_quintals") is not None:
+    has_valid_yield = False
+    if harvest_data.get("yield_quintals") is not None and target_crop != "muskmelon":
         try:
             yield_q = float(harvest_data["yield_quintals"])
+            has_valid_yield = True
         except (ValueError, TypeError):
-            yield_q = 38.9
+            has_valid_yield = False
     elif crop_cycle_entry.get("baseline_yield_q_ha") is not None:
         base_q_ha = float(crop_cycle_entry["baseline_yield_q_ha"])
         area_ha = area * (0.404686 if area_unit.lower() in ["acre", "acres"] else 1.0)
         yield_q = round(base_q_ha * area_ha, 1)
+        has_valid_yield = True
+
+    if has_valid_yield:
+        low_yield = round(yield_q * 0.88, 1)
+        high_yield = round(yield_q * 1.12, 1)
+        yield_display = f"{low_yield} – {yield_q} – {high_yield} Quintals (lookup table benchmark [UNVERIFIED])"
     else:
-        yield_q = 38.9
+        yield_display = "Not applicable (no official yield/MSP benchmark)"
 
-    low_yield = round(yield_q * 0.88, 1)
-    high_yield = round(yield_q * 1.12, 1)
-    yield_display = f"{low_yield} – {yield_q} – {high_yield} Quintals (lookup table benchmark [UNVERIFIED])"
-
-    # MSP lookup (Jute source unconfirmed -> not verified)
+    # MSP lookup (only official MSP crops; non-MSP crops like muskmelon show Not applicable)
+    is_official_msp = (msp_entry.get("type") == "official_msp") and (msp_entry.get("msp_rs_per_quintal") is not None)
     if target_crop == "jute":
         msp_benchmark_str = "not verified (source unconfirmed) [lookup table: UNVERIFIED]"
         msp_type = "UNVERIFIED (Pending Official Gazette)"
-    elif msp_entry.get("msp_rs_per_quintal"):
+    elif is_official_msp:
         msp_val = msp_entry["msp_rs_per_quintal"]
         msp_year = msp_entry.get("year", "2024-25")
         msp_benchmark_str = f"₹{msp_val:,} / Quintal (Year: {msp_year}) [lookup table: UNVERIFIED]"
         msp_type = "UNVERIFIED (Pending Official Gazette)"
     else:
-        raw_msp_rate = harvest_data.get("msp_rs_per_quintal", 2300)
-        msp_year = harvest_data.get("msp_year", "2024-25")
-        msp_benchmark_str = f"₹{raw_msp_rate:,} / Quintal (Year: {msp_year}) [lookup table: UNVERIFIED]"
-        msp_type = "UNVERIFIED (Pending Official Gazette)"
+        msp_benchmark_str = "Not applicable (no official yield/MSP benchmark)"
+        msp_type = "Not applicable (non-MSP crop)"
 
     if not raw_sowing_date or str(raw_sowing_date).strip() == "" or str(raw_sowing_date).lower() in ["none", "null"]:
         harvest_meta = [

@@ -302,8 +302,8 @@
         "grain_filling": 0.20,
         "maturity": 0.05
       },
-      "baseline_yield_q_ha": 190.0,
-      "yield_source": "Indian Vegetable Statistics 2023"
+      "baseline_yield_q_ha": null,
+      "yield_source": "Not applicable (no official yield benchmark)"
     },
     "apple": {
       "name": "Apple",
