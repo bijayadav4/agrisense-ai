@@ -94,6 +94,51 @@ class SoilFlowAuditTestCase(unittest.TestCase):
         self.assertTrue(data["is_estimated"])
         self.assertIsNotNone(data["estimated_warning"])
 
+    def test_demo_mode_fixed_input_returns_top1_rice(self):
+        """STEP 3: Demo request with N=85, P=48, K=40, pH=6.4 + fixed weather (T=25, H=80, rain=200):
+        - Label: 'Demo input (fixed weather)'
+        - is_estimated: True
+        - Fixed expected output: top-1 Rice
+        """
+        demo_payload = {
+            "N": 85,
+            "P": 48,
+            "K": 40,
+            "ph": 6.4,
+            "temperature": 25,
+            "humidity": 80,
+            "rainfall": 200,
+            "location": "Coimbatore, Tamil Nadu",
+            "data_source": "Demo input (fixed weather)",
+            "is_estimated": True,
+        }
+        res = self.client.post("/api/recommend/crop", json=demo_payload)
+        self.assertEqual(res.status_code, 200)
+        data = res.get_json()
+        self.assertEqual(data["crop"].lower(), "rice")
+        self.assertEqual(data["top_crops"][0]["crop"].lower(), "rice")
+        self.assertEqual(data["data_source"], "Demo input (fixed weather)")
+        self.assertTrue(data["is_estimated"])
+
+    def test_live_mode_weather_distinct_label_and_live_fetch(self):
+        """In live mode without manual climate parameters:
+        - Weather is fetched dynamically (or from cache)
+        - Label remains distinct ('User entered' / 'Lab test'), NOT demo
+        """
+        live_payload = {
+            "N": 85,
+            "P": 48,
+            "K": 40,
+            "ph": 6.4,
+            "location": "Coimbatore, Tamil Nadu",
+            "data_source": "User entered",
+        }
+        res = self.client.post("/api/recommend/crop", json=live_payload)
+        self.assertEqual(res.status_code, 200)
+        data = res.get_json()
+        self.assertEqual(data["data_source"], "User entered")
+        self.assertFalse(data["is_estimated"])
+
     def test_fertilizer_demo_estimated_warning(self):
         """Demo estimated values in fertilizer should have 'Estimated, not for actual application'."""
         payload = {

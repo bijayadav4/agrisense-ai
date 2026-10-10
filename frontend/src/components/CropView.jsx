@@ -174,7 +174,13 @@ export default function CropView({ activeLocation, weatherData, soilData, onUpda
       K: 40,
       ph: 6.4
     });
-    setDataSource('Demo estimated');
+    setDataSource('Demo input (fixed weather)');
+    setIsManualClimate(true);
+    setManualClimate({
+      temperature: 25,
+      humidity: 80,
+      rainfall: 200
+    });
     setError('');
   };
 
@@ -210,7 +216,7 @@ export default function CropView({ activeLocation, weatherData, soilData, onUpda
         rainfall: effRainfall,
         location: activeLocation || 'Coimbatore, Tamil Nadu',
         data_source: dataSource,
-        is_estimated: dataSource === 'Demo estimated'
+        is_estimated: dataSource.toLowerCase().includes('demo')
       };
 
       const data = (showExperimental && useFusionModel)
@@ -221,7 +227,7 @@ export default function CropView({ activeLocation, weatherData, soilData, onUpda
         const enriched = {
           ...data,
           data_source: dataSource,
-          is_estimated: dataSource === 'Demo estimated',
+          is_estimated: dataSource.toLowerCase().includes('demo'),
           N: formData.N,
           P: formData.P,
           K: formData.K,
@@ -626,7 +632,7 @@ export default function CropView({ activeLocation, weatherData, soilData, onUpda
         </div>
 
         {/* Demo Data Amber Note Banner */}
-        {dataSource === 'Demo estimated' && (
+        {dataSource.toLowerCase().includes('demo') && (
           <div style={{
             marginTop: '10px',
             padding: '8px 12px',
@@ -641,7 +647,7 @@ export default function CropView({ activeLocation, weatherData, soilData, onUpda
           }}>
             <AlertTriangle size={15} style={{ flexShrink: 0, color: '#d97706' }} />
             <span>
-              <strong>Source: Demo estimated</strong> — These are estimated values. For accurate recommendations, please use Soil Health Card or lab test values.
+              <strong>Source: {dataSource}</strong> — These are estimated values. For accurate recommendations, please use Soil Health Card or lab test values.
             </span>
           </div>
         )}
@@ -806,7 +812,7 @@ export default function CropView({ activeLocation, weatherData, soilData, onUpda
               color: recommendation.is_estimated ? '#92400e' : '#15803d',
               border: `1px solid ${recommendation.is_estimated ? '#fde68a' : '#86efac'}`
             }}>
-              Data source: {recommendation.is_estimated ? 'Demo estimated' : 'Lab test'}
+              Data source: {recommendation.data_source || (recommendation.is_estimated ? 'Demo input (fixed weather)' : 'User entered')}
             </span>
           </div>
 

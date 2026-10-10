@@ -57,7 +57,18 @@ export default function App() {
         const [health, weather, cropRes] = await Promise.all([
           checkHealth(),
           getWeatherData('Coimbatore'),
-          recommendCrop({ N: 85, P: 48, K: 40, ph: 6.4, location: 'Coimbatore', data_source: 'Demo estimated' }).catch(() => null)
+          recommendCrop({
+            N: 85,
+            P: 48,
+            K: 40,
+            ph: 6.4,
+            temperature: 25,
+            humidity: 80,
+            rainfall: 200,
+            location: 'Coimbatore',
+            data_source: 'Demo input (fixed weather)',
+            is_estimated: true
+          }).catch(() => null)
         ]);
         if (!isMounted) return;
         setServerStatus(health.status === 'online' ? 'online' : 'offline');

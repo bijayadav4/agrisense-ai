@@ -241,8 +241,8 @@ def generate_farmer_report_card(data):
     raw_data_source = str(data.get("data_source", "")).strip()
     is_estimated_flag = bool(data.get("is_estimated", False))
 
-    if is_estimated_flag or raw_data_source.lower() in ["demo estimated", "demo data", "demo"]:
-        data_source = "Demo estimated"
+    if "demo" in raw_data_source.lower() or is_estimated_flag:
+        data_source = raw_data_source if raw_data_source else "Demo input (fixed weather)"
         is_estimated = True
     elif raw_data_source.lower() in ["lab test", "soil health card", "lab"]:
         data_source = "Lab test"
@@ -251,8 +251,8 @@ def generate_farmer_report_card(data):
         data_source = "User entered"
         is_estimated = False
     else:
-        data_source = "Demo estimated" if is_estimated_flag else "User entered"
-        is_estimated = (data_source == "Demo estimated")
+        data_source = "Demo input (fixed weather)" if is_estimated_flag else "User entered"
+        is_estimated = is_estimated_flag
 
     n_val = data.get("N", data.get("crop_data", {}).get("N", "—"))
     p_val = data.get("P", data.get("crop_data", {}).get("P", "—"))

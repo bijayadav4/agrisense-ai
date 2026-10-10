@@ -872,8 +872,8 @@ class MLService:
             },
             "provenance_note": "Limited benchmark data (synthetic ICAR extension)" if primary_crop == "wheat" else None,
             "data_source": str(data.get("data_source", "User entered")).strip(),
-            "is_estimated": (str(data.get("data_source", "")).strip() == "Demo estimated") or bool(data.get("is_estimated", False)),
-            "estimated_warning": "Estimated values. Please confirm with a lab test." if ((str(data.get("data_source", "")).strip() == "Demo estimated") or bool(data.get("is_estimated", False))) else None,
+            "is_estimated": ("demo" in str(data.get("data_source", "")).lower()) or bool(data.get("is_estimated", False)),
+            "estimated_warning": "Estimated values. Please confirm with a lab test." if (("demo" in str(data.get("data_source", "")).lower()) or bool(data.get("is_estimated", False))) else None,
             "alternatives": alternatives,
             "soil_health": soil_health,
             "soil_amendments": soil_amendments,
@@ -1217,7 +1217,7 @@ class MLService:
         }
 
         data_source = str(data.get("data_source", "User entered")).strip()
-        is_estimated = (data_source == "Demo estimated") or bool(data.get("is_estimated", False))
+        is_estimated = ("demo" in data_source.lower()) or bool(data.get("is_estimated", False))
         estimated_warning = "Estimated, not for actual application" if is_estimated else None
 
         scientific_plan["data_source"] = data_source
