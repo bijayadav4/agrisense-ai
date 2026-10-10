@@ -1,4 +1,5 @@
 import io
+import json
 import os
 import re
 from datetime import datetime, timedelta
@@ -17,6 +18,54 @@ from reportlab.platypus import (
     Table,
     TableStyle,
 )
+
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
+
+
+def _load_data_file(filename):
+    try:
+        p = os.path.join(DATA_DIR, filename)
+        if os.path.exists(p):
+            with open(p, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"⚠️ Error loading {filename}: {e}")
+    return {}
+
+
+CROP_CYCLES_LOOKUP = _load_data_file("crop_cycles.json").get("crops", {})
+MSP_LOOKUP = _load_data_file("msp.json").get("crops", {})
+
+
+def check_agronomic_suitability(crop_name, temp_val=None, rain_val=None, n_val=None, p_val=None, k_val=None):
+    """
+    Evaluates physical suitability bounds from known agronomic benchmarks.
+    Returns matched agronomic observation string if matching, else None.
+    """
+    c_lower = str(crop_name).lower().strip()
+    checks = []
+    try:
+        t = float(temp_val) if temp_val is not None and str(temp_val).strip() not in ("", "—") else None
+    except (ValueError, TypeError):
+        t = None
+    try:
+        r = float(rain_val) if rain_val is not None and str(rain_val).strip() not in ("", "—") else None
+    except (ValueError, TypeError):
+        r = None
+
+    if r is not None:
+        if c_lower in ["rice", "jute"] and r >= 120:
+            checks.append(f"High moisture fit (rainfall {r:.0f} mm)")
+        elif c_lower in ["wheat", "cotton", "maize", "chickpea"] and r <= 150:
+            checks.append(f"Moisture suitable (rainfall {r:.0f} mm)")
+    if t is not None:
+        if c_lower in ["rice", "jute", "cotton", "maize"] and 20 <= t <= 38:
+            checks.append(f"Optimal thermal range ({t:.0f}°C)")
+        elif c_lower in ["wheat", "chickpea", "lentil"] and 10 <= t <= 26:
+            checks.append(f"Favorable cool-season thermal range ({t:.0f}°C)")
+
+    return "; ".join(checks) if checks else None
+
 
 # Register Unicode TrueType fonts so Hindi (Devanagari) and Tamil characters render cleanly without boxes
 FONT_NORMAL = "Helvetica"
@@ -270,6 +319,33 @@ def generate_farmer_report_card(data):
         )
         story.append(warn_box)
 
+    location_mismatch = bool(data.get("location_mismatch") or data.get("weather_data", {}).get("location_mismatch"))
+    location_advisory = data.get("location_advisory") or data.get("weather_data", {}).get("location_advisory")
+    if location_mismatch and location_advisory:
+        story.append(Spacer(1, 2))
+        mismatch_box = Table(
+            [[
+                Paragraph(
+                    f"<b>Location Advisory:</b> {location_advisory}",
+                    warning_style,
+                )
+            ]],
+            colWidths=[540],
+        )
+        mismatch_box.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#fffbeb")),
+                    ("BOX", (0, 0), (-1, -1), 1.0, colors.HexColor("#f59e0b")),
+                    ("TOPPADDING", (0, 0), (-1, -1), 3),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 7),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 7),
+                ]
+            )
+        )
+        story.append(mismatch_box)
+
     story.append(Spacer(1, 2.5))
 
     crop_data = data.get("crop_data", {})
@@ -299,46 +375,98 @@ def generate_farmer_report_card(data):
     provenance_note = crop_data.get("provenance_note")
 
     if is_ml_model:
-        top3_rows = [
-            [
+        include_normalized = bool(
+            data.get("include_normalized")
+            or crop_data.get("include_normalized")
+            or crop_data.get("show_normalized_top3")
+        )
+
+        temp_input = data.get("temperature", data.get("soil_data", {}).get("temperature", crop_data.get("temperature")))
+        rain_input = data.get("rainfall", data.get("soil_data", {}).get("rainfall", crop_data.get("rainfall")))
+
+        top3_items = top_crops[:3]
+        top3_raw_floats = []
+        for it in top3_items:
+            pval = it.get("probability")
+            if pval is not None:
+                p_f = float(pval) if float(pval) <= 1.0 else float(pval) / 100.0
+            elif it.get("confidence") is not None:
+                p_f = float(it["confidence"]) / 100.0
+            else:
+                p_f = 0.0
+            top3_raw_floats.append(p_f)
+
+        top3_sum = sum(top3_raw_floats)
+
+        agronomic_notes = []
+        for idx, item in enumerate(top3_items):
+            c_name = str(item.get("crop", "")).capitalize()
+            user_reason = item.get("reason")
+            matched_note = check_agronomic_suitability(
+                c_name, temp_val=temp_input, rain_val=rain_input, n_val=n_val, p_val=p_val, k_val=k_val
+            )
+            final_note = user_reason if user_reason else matched_note
+            agronomic_notes.append(final_note)
+
+        has_reasons = any(n is not None and str(n).strip() != "" for n in agronomic_notes)
+
+        # Build table columns and col widths (must total exactly 540pt for printable area)
+        if has_reasons and include_normalized:
+            top3_headers = [
                 Paragraph("<b>Rank</b>", body_bold),
                 Paragraph("<b>Crop Candidate</b>", body_bold),
-                Paragraph("<b>Probability (%)</b>", body_bold),
-                Paragraph("<b>Agronomic Notes & Reason</b>", body_bold),
+                Paragraph("<b>Raw Probability (%)<br/><font size='6.5'>Share of 22 classes</font></b>", body_bold),
+                Paragraph("<b>Normalized over Top-3 (%)</b>", body_bold),
+                Paragraph("<b>Agronomic Notes (General guidance)</b>", body_bold),
             ]
-        ]
+            col_widths = [34, 96, 95, 95, 220]
+        elif has_reasons and not include_normalized:
+            top3_headers = [
+                Paragraph("<b>Rank</b>", body_bold),
+                Paragraph("<b>Crop Candidate</b>", body_bold),
+                Paragraph("<b>Raw Probability (%)<br/><font size='6.5'>Share of 22 classes</font></b>", body_bold),
+                Paragraph("<b>Agronomic Notes (General guidance)</b>", body_bold),
+            ]
+            col_widths = [38, 112, 105, 285]
+        elif not has_reasons and include_normalized:
+            top3_headers = [
+                Paragraph("<b>Rank</b>", body_bold),
+                Paragraph("<b>Crop Candidate</b>", body_bold),
+                Paragraph("<b>Raw Probability (%)<br/><font size='6.5'>Share of 22 classes</font></b>", body_bold),
+                Paragraph("<b>Normalized over Top-3 (%)</b>", body_bold),
+            ]
+            col_widths = [50, 190, 150, 150]
+        else:
+            # Reason column removed when no matching agronomic check exists
+            top3_headers = [
+                Paragraph("<b>Rank</b>", body_bold),
+                Paragraph("<b>Crop Candidate</b>", body_bold),
+                Paragraph("<b>Raw Probability (%)<br/><font size='6.5'>Share of 22 classes</font></b>", body_bold),
+            ]
+            col_widths = [60, 240, 240]
 
-        for idx, item in enumerate(top_crops[:3]):
+        top3_rows = [top3_headers]
+
+        for idx, item in enumerate(top3_items):
             r_num = item.get("rank", idx + 1)
             c_name = str(item.get("crop", "")).capitalize()
-            p_val = item.get("probability")
-            if p_val is not None:
-                conf_val = f"{round(float(p_val) * 100, 1):.1f}%"
-            else:
-                conf_val = f"{float(item.get('confidence', 0.0)):.1f}%"
+            raw_pct = f"{top3_raw_floats[idx] * 100:.1f}%"
+            norm_pct = f"{(top3_raw_floats[idx] / top3_sum) * 100:.1f}%" if top3_sum > 0 else "—"
 
-            if item.get("reason"):
-                reason = item["reason"]
-            elif r_num == 1:
-                reason = "Primary match. Highest suitability alignment under given agro-climatic parameters."
-            elif r_num == 2:
-                reason = f"Secondary candidate. Alternative crop candidate matching regional climate envelope."
-            else:
-                reason = "Tertiary candidate. Viable crop rotation option under adjusted management."
+            row_cells = [
+                Paragraph(str(r_num), body_style),
+                Paragraph(f"<b>{c_name}</b>", body_style),
+                Paragraph(raw_pct, body_style),
+            ]
+            if include_normalized:
+                row_cells.append(Paragraph(norm_pct, body_style))
+            if has_reasons:
+                note_str = agronomic_notes[idx] if agronomic_notes[idx] else "—"
+                row_cells.append(Paragraph(note_str, body_style))
 
-            if c_name.lower() == "wheat" and "benchmark" not in reason.lower():
-                reason = "Calibrated from ICAR synthetic parameter extension (limited benchmark data)."
+            top3_rows.append(row_cells)
 
-            top3_rows.append(
-                [
-                    Paragraph(str(r_num), body_style),
-                    Paragraph(f"<b>{c_name}</b>", body_style),
-                    Paragraph(conf_val, body_style),
-                    Paragraph(reason, body_style),
-                ]
-            )
-
-        top3_table = Table(top3_rows, colWidths=[38, 112, 95, 295])
+        top3_table = Table(top3_rows, colWidths=col_widths)
         top3_table.setStyle(
             TableStyle(
                 [
@@ -626,7 +754,8 @@ def generate_farmer_report_card(data):
         [
             Paragraph(
                 f"<b>Formula:</b> Daily Liters = Area ({area_m2_str} m² [{area} {area_unit}]) × Net Need ({day1_net:.1f} mm) × 1 L/(m²·mm) = {day1_liters:,.0f} L | "
-                f"App Rate = 2.0 LPH ÷ (0.4m × 0.8m) = 6.25 mm/hr | Runtime = (Net mm ÷ 6.25) ÷ 90% [e.g. 5.2 mm → 0.92h gross (0.83h @ 100% eff)]",
+                f"App Rate = 2.0 LPH ÷ (0.4m × 0.8m) = 6.25 mm/hr | Runtime = (Net mm ÷ 6.25) ÷ 90% [0.92h gross (0.83h @ 100% eff)] | "
+                f"Rain counted fully as effective (no runoff loss)",
                 subtitle_style,
             ),
             "",
@@ -723,18 +852,40 @@ def generate_farmer_report_card(data):
     harvest_data = data.get("harvest_data", {})
     raw_sowing_date = harvest_data.get("sowing_date") or data.get("sowing_date")
 
-    try:
-        yield_q = float(harvest_data.get("yield_quintals", 38.9))
-    except (ValueError, TypeError):
+    target_crop = str(harvest_data.get("crop") or primary_crop or data.get("crop") or "rice").strip().lower()
+    crop_cycle_entry = CROP_CYCLES_LOOKUP.get(target_crop, {})
+    msp_entry = MSP_LOOKUP.get(target_crop, {})
+
+    if harvest_data.get("yield_quintals") is not None:
+        try:
+            yield_q = float(harvest_data["yield_quintals"])
+        except (ValueError, TypeError):
+            yield_q = 38.9
+    elif crop_cycle_entry.get("baseline_yield_q_ha") is not None:
+        base_q_ha = float(crop_cycle_entry["baseline_yield_q_ha"])
+        area_ha = area * (0.404686 if area_unit.lower() in ["acre", "acres"] else 1.0)
+        yield_q = round(base_q_ha * area_ha, 1)
+    else:
         yield_q = 38.9
 
     low_yield = round(yield_q * 0.88, 1)
     high_yield = round(yield_q * 1.12, 1)
-    yield_display = f"{low_yield} – {yield_q} – {high_yield} Quintals (Illustrative scenario range, not a statistical interval)"
+    yield_display = f"{low_yield} – {yield_q} – {high_yield} Quintals (lookup table benchmark [UNVERIFIED])"
 
-    msp_year = harvest_data.get("msp_year", "2024-25")
-    msp_rate = harvest_data.get("msp_rs_per_quintal", 2300)
-    msp_type = harvest_data.get("msp_type", "UNVERIFIED (Pending Official Gazette)")
+    # MSP lookup (Jute source unconfirmed -> not verified)
+    if target_crop == "jute":
+        msp_benchmark_str = "not verified (source unconfirmed) [lookup table: UNVERIFIED]"
+        msp_type = "UNVERIFIED (Pending Official Gazette)"
+    elif msp_entry.get("msp_rs_per_quintal"):
+        msp_val = msp_entry["msp_rs_per_quintal"]
+        msp_year = msp_entry.get("year", "2024-25")
+        msp_benchmark_str = f"₹{msp_val:,} / Quintal (Year: {msp_year}) [lookup table: UNVERIFIED]"
+        msp_type = "UNVERIFIED (Pending Official Gazette)"
+    else:
+        raw_msp_rate = harvest_data.get("msp_rs_per_quintal", 2300)
+        msp_year = harvest_data.get("msp_year", "2024-25")
+        msp_benchmark_str = f"₹{raw_msp_rate:,} / Quintal (Year: {msp_year}) [lookup table: UNVERIFIED]"
+        msp_type = "UNVERIFIED (Pending Official Gazette)"
 
     if not raw_sowing_date or str(raw_sowing_date).strip() == "" or str(raw_sowing_date).lower() in ["none", "null"]:
         harvest_meta = [
@@ -743,7 +894,7 @@ def generate_farmer_report_card(data):
                 Paragraph(f"<b>Expected Yield Range:</b> {yield_display}", body_style),
             ],
             [
-                Paragraph(f"<b>Government MSP Benchmark:</b> ₹{msp_rate:,} / Quintal (Year: {msp_year})", body_style),
+                Paragraph(f"<b>Government MSP Benchmark:</b> {msp_benchmark_str}", body_style),
                 Paragraph(f"<b>MSP Status Label:</b> <font color='#b91c1c'><b>{msp_type}</b></font>", body_style),
             ],
         ]
@@ -758,7 +909,7 @@ def generate_farmer_report_card(data):
         except Exception:
             today_date = datetime.now().date()
 
-        crop_duration = int(harvest_data.get("crop_cycle_days") or harvest_data.get("duration_days") or 125)
+        crop_duration = int(harvest_data.get("crop_cycle_days") or harvest_data.get("duration_days") or crop_cycle_entry.get("duration_days") or 125)
         harvest_dt = sowing_dt + timedelta(days=crop_duration)
         harvest_date_str = harvest_dt.strftime("%B %d, %Y")
         days_rem = (harvest_dt - today_date).days
@@ -775,7 +926,7 @@ def generate_farmer_report_card(data):
                 Paragraph(f"<b>Expected Yield Range:</b> {yield_display}", body_style),
             ],
             [
-                Paragraph(f"<b>Government MSP Benchmark:</b> ₹{msp_rate:,} / Quintal (Year: {msp_year})", body_style),
+                Paragraph(f"<b>Government MSP Benchmark:</b> {msp_benchmark_str}", body_style),
                 Paragraph(f"<b>MSP Status Label:</b> <font color='#b91c1c'><b>{msp_type}</b></font>", body_style),
             ],
         ]
