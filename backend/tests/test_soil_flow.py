@@ -822,6 +822,109 @@ class SoilFlowAuditTestCase(unittest.TestCase):
         self.assertIn("Ambiguity Advisory", text_auto)
         self.assertIn("Ambiguous", text_auto)
 
+    def test_pdf_report_a4_page_size_and_single_page_fit(self):
+        """Audit A4 Layout & Fit requirements:
+        - Page size is A4 (pypdf mediabox ~595.28 x 841.89)
+        - Page count = 1 on both demo payload and live payload
+        - Estimated warning text appears exactly once on demo payload, zero on live payload
+        - Fallback mode omits the 7-day irrigation table
+        """
+        # 1. Demo payload with fallback weather
+        payload_demo = {
+            "farmer_name": "Demo Farmer",
+            "location": "Coimbatore, Tamil Nadu",
+            "area": 1.0,
+            "area_unit": "Acres",
+            "data_source": "Demo input (fixed weather)",
+            "is_estimated": True,
+            "crop_data": {
+                "crop": "Rice",
+                "top_crops": [
+                    {"rank": 1, "crop": "Rice", "probability": 0.51, "confidence": 51.0},
+                    {"rank": 2, "crop": "Jute", "probability": 0.49, "confidence": 49.0},
+                ],
+                "is_ambiguous": True,
+                "ambiguity_warning": "Ambiguous prediction: Confidence gap is only 2.0% (<15%).",
+            },
+            "irrigation_data": {
+                "forecast_source": "Fallback (Agro-climatic Regional Baseline)",
+                "weekly_schedule": [
+                    {"day": f"Day {i}", "date": f"2026-10-{10+i}", "rainfall_mm": 0.0, "et0_mm": 5.0, "temp_max": 30.0}
+                    for i in range(7)
+                ],
+            },
+        }
+        res_demo = self.client.post("/api/report/generate", json=payload_demo)
+        self.assertEqual(res_demo.status_code, 200)
+        reader_demo = PdfReader(io.BytesIO(res_demo.data))
+
+        # Check Page count = 1
+        self.assertEqual(len(reader_demo.pages), 1)
+
+        # Check Page size A4 (mediabox width ~595.28, height ~841.89)
+        mb_demo = reader_demo.pages[0].mediabox
+        self.assertAlmostEqual(float(mb_demo.width), 595.28, delta=1.0)
+        self.assertAlmostEqual(float(mb_demo.height), 841.89, delta=1.0)
+
+        text_demo = reader_demo.pages[0].extract_text()
+        # Estimated warning text appears exactly once
+        self.assertEqual(text_demo.count("Estimated Values Warning:"), 1)
+        # Fallback irrigation table is absent (Schedule Day & Date header not in text)
+        self.assertNotIn("Schedule Day & Date", text_demo)
+        self.assertIn("Forecast unavailable, using estimated average", text_demo)
+
+        # 2. Live payload with variable 7-day live weather
+        payload_live = {
+            "farmer_name": "Ramesh Kumar",
+            "location": "Coimbatore, Tamil Nadu",
+            "area": 2.5,
+            "area_unit": "Acres",
+            "data_source": "User entered",
+            "is_estimated": False,
+            "crop_data": {
+                "crop": "Rice",
+                "top_crops": [
+                    {"rank": 1, "crop": "Rice", "probability": 0.85, "confidence": 85.0, "reason": "Optimal kharif rainfall"},
+                    {"rank": 2, "crop": "Jute", "probability": 0.10, "confidence": 10.0},
+                    {"rank": 3, "crop": "Cotton", "probability": 0.05, "confidence": 5.0},
+                ],
+            },
+            "irrigation_data": {
+                "forecast_source": "Open-Meteo Live",
+                "weekly_schedule": [
+                    {"day": "Today", "date": "2026-10-10", "rainfall_mm": 12.0, "et0_mm": 4.5, "temp_max": 29.0},
+                    {"day": "Sun", "date": "2026-10-11", "rainfall_mm": 0.0, "et0_mm": 5.2, "temp_max": 31.0},
+                    {"day": "Mon", "date": "2026-10-12", "rainfall_mm": 2.5, "et0_mm": 4.8, "temp_max": 30.0},
+                    {"day": "Tue", "date": "2026-10-13", "rainfall_mm": 0.0, "et0_mm": 5.0, "temp_max": 32.0},
+                    {"day": "Wed", "date": "2026-10-14", "rainfall_mm": 0.0, "et0_mm": 5.1, "temp_max": 31.0},
+                    {"day": "Thu", "date": "2026-10-15", "rainfall_mm": 8.0, "et0_mm": 4.2, "temp_max": 28.0},
+                    {"day": "Fri", "date": "2026-10-16", "rainfall_mm": 0.0, "et0_mm": 4.9, "temp_max": 30.0},
+                ],
+            },
+            "harvest_data": {
+                "crop": "Rice",
+                "sowing_date": "2026-06-15",
+                "crop_cycle_days": 120,
+            },
+        }
+        res_live = self.client.post("/api/report/generate", json=payload_live)
+        self.assertEqual(res_live.status_code, 200)
+        reader_live = PdfReader(io.BytesIO(res_live.data))
+
+        # Check Page count = 1
+        self.assertEqual(len(reader_live.pages), 1)
+
+        # Check Page size A4
+        mb_live = reader_live.pages[0].mediabox
+        self.assertAlmostEqual(float(mb_live.width), 595.28, delta=1.0)
+        self.assertAlmostEqual(float(mb_live.height), 841.89, delta=1.0)
+
+        text_live = reader_live.pages[0].extract_text()
+        # Zero estimated warnings on live payload
+        self.assertEqual(text_live.count("Estimated Values Warning:"), 0)
+        # Live schedule table is present
+        self.assertIn("Schedule Day & Date", text_live)
+
 
 if __name__ == "__main__":
     unittest.main()
