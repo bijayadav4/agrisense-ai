@@ -38,11 +38,13 @@ export const checkHealth = async () => {
 };
 
 // 2. Weather Data with Instant 0ms Memory Cache
-export const getWeatherData = async (location = 'New Delhi', lat = null, lon = null) => {
+export const getWeatherData = async (location = 'New Delhi', lat = null, lon = null, options = {}) => {
+  const signal = options?.signal;
+  const skipCache = Boolean(options?.skipCache);
   const cacheKey = `${String(location).trim().toLowerCase()}_${lat}_${lon}`;
   const now = Date.now();
   
-  if (weatherCache.has(cacheKey)) {
+  if (!skipCache && weatherCache.has(cacheKey)) {
     const cached = weatherCache.get(cacheKey);
     if (now - cached.timestamp < WEATHER_TTL_MS) {
       return cached.data;
@@ -54,11 +56,17 @@ export const getWeatherData = async (location = 'New Delhi', lat = null, lon = n
     url += `&lat=${lat}&lon=${lon}`;
   }
 
-  const response = await api.get(url);
+  const response = await api.get(url, { signal });
   if (response.data && response.data.success) {
     weatherCache.set(cacheKey, { data: response.data, timestamp: now });
   }
   return response.data;
+};
+
+export const clearPredictionCaches = () => {
+  weatherCache.clear();
+  cropCache.clear();
+  fertilizerCache.clear();
 };
 
 // 3. Crop Recommendation with Instant Sub-millisecond Cache

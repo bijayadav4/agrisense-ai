@@ -465,6 +465,8 @@ def get_weather_data(location="Pune", lat=None, lon=None):
 
                 owm_res = {
                     "city": resolved_name,
+                    "latitude": target_lat,
+                    "longitude": target_lon,
                     "temperature": temp,
                     "feels_like": feels_like,
                     "humidity": humidity,
@@ -510,6 +512,8 @@ def get_weather_data(location="Pune", lat=None, lon=None):
 
     return {
         "city": resolved_name,
+        "latitude": target_lat,
+        "longitude": target_lon,
         "temperature": 27.0,
         "feels_like": 29.0,
         "humidity": 65,

@@ -8,13 +8,16 @@ import IrrigationView from './components/IrrigationView';
 import HarvestView from './components/HarvestView';
 import WeatherView from './components/WeatherView';
 import LocationModal from './components/LocationModal';
-import { getWeatherData, checkHealth, getHarvestPrediction, recommendCrop } from './services/api';
+import { getWeatherData, checkHealth, getHarvestPrediction, recommendCrop, clearPredictionCaches } from './services/api';
 import './App.css';
-
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [locationName, setLocationName] = useState('Coimbatore, Tamil Nadu');
+  const [location, setLocation] = useState({
+    name: 'New Delhi',
+    lat: 28.6139,
+    lon: 77.2090
+  });
   const [weatherData, setWeatherData] = useState(null);
   const [farmArea, setFarmArea] = useState(2.0);
   const [farmAreaUnit, setFarmAreaUnit] = useState('Acres');
@@ -49,14 +52,13 @@ export default function App() {
     return () => { isMounted = false; };
   }, [recommendation?.crop, farmArea, farmAreaUnit]);
 
-  // Initial load: health check & default weather (parallelized for 0s load)
+  // Initial load: health check & initial demo crop recommendation
   useEffect(() => {
     let isMounted = true;
     const initApp = async () => {
       try {
-        const [health, weather, cropRes] = await Promise.all([
+        const [health, cropRes] = await Promise.all([
           checkHealth(),
-          getWeatherData('Coimbatore'),
           recommendCrop({
             N: 85,
             P: 48,
@@ -65,16 +67,13 @@ export default function App() {
             temperature: 25,
             humidity: 80,
             rainfall: 200,
-            location: 'Coimbatore',
+            location: location.name,
             data_source: 'Demo input (fixed weather)',
             is_estimated: true
           }).catch(() => null)
         ]);
         if (!isMounted) return;
         setServerStatus(health.status === 'online' ? 'online' : 'offline');
-        if (weather && weather.success) {
-          setWeatherData(weather.data);
-        }
         if (cropRes && cropRes.success) {
           setRecommendation(cropRes);
         }
@@ -88,23 +87,34 @@ export default function App() {
     return () => { isMounted = false; };
   }, []);
 
-  // Re-fetch weather whenever locationName changes
+  // Unified single source of truth for weather with AbortController stale guard
   useEffect(() => {
-    if (!locationName) return;
-    let isMounted = true;
-    const updateWeather = async () => {
+    if (!location.name && location.lat === null) return;
+    const controller = new AbortController();
+
+    const fetchWeather = async () => {
       try {
-        const res = await getWeatherData(locationName);
-        if (isMounted && res && res.success) {
+        clearPredictionCaches();
+        const res = await getWeatherData(location.name, location.lat, location.lon, {
+          signal: controller.signal
+        });
+        if (res && res.success) {
           setWeatherData(res.data);
         }
       } catch (err) {
-        console.error('Weather re-fetch error:', err);
+        if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED' || err.message === 'canceled') {
+          return;
+        }
+        console.error('Weather fetch error:', err);
       }
     };
-    updateWeather();
-    return () => { isMounted = false; };
-  }, [locationName]);
+
+    fetchWeather();
+
+    return () => {
+      controller.abort();
+    };
+  }, [location.lat, location.lon, location.name]);
 
   const [soilData, setSoilData] = useState({
     soil_type: 'Loamy',
@@ -120,12 +130,24 @@ export default function App() {
     });
   };
 
-  // Handle Location Switch
-  const handleLocationSelect = async (loc) => {
-    setLocationName(loc);
+  // Handle Location Switch (Single update, no duplicate fetches)
+  const handleLocationSelect = (loc) => {
+    if (typeof loc === 'string') {
+      setLocation({
+        name: loc.trim(),
+        lat: null,
+        lon: null
+      });
+    } else if (loc && typeof loc === 'object') {
+      setLocation({
+        name: loc.name || loc.city || 'Unknown',
+        lat: loc.lat ?? null,
+        lon: loc.lon ?? null
+      });
+    }
   };
 
-  // GPS Auto-detect handler
+  // GPS Auto-detect handler (Single fetch flow via unified state)
   const handleDetectGPS = () => {
     if (!navigator.geolocation) {
       alert("GPS is not supported by your browser. Please search your district name.");
@@ -134,19 +156,14 @@ export default function App() {
 
     setDetectingGPS(true);
     navigator.geolocation.getCurrentPosition(
-      async (pos) => {
+      (pos) => {
         const { latitude, longitude } = pos.coords;
-        try {
-          const res = await getWeatherData('GPS Farm Location', latitude, longitude);
-          if (res.success) {
-            setWeatherData(res.data);
-            setLocationName(res.data.city || `GPS Farm (${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°)`);
-          }
-        } catch (err) {
-          console.error('GPS weather fetch error:', err);
-        } finally {
-          setDetectingGPS(false);
-        }
+        setLocation({
+          name: `GPS Farm (${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°)`,
+          lat: latitude,
+          lon: longitude
+        });
+        setDetectingGPS(false);
       },
       (err) => {
         console.warn('GPS location denied:', err.message);
@@ -168,7 +185,7 @@ export default function App() {
       <div className="main-wrapper">
         {/* Top Header Bar */}
         <Header
-          locationName={locationName}
+          locationName={location.name}
           weatherData={weatherData}
           onOpenLocationModal={() => setIsLocationModalOpen(true)}
           onDetectGPS={handleDetectGPS}
@@ -179,7 +196,7 @@ export default function App() {
         <main>
           {activeTab === 'dashboard' && (
             <DashboardView
-              locationName={locationName}
+              locationName={location.name}
               weatherData={weatherData}
               recommendation={recommendation}
               farmArea={farmArea}
@@ -191,7 +208,7 @@ export default function App() {
 
           {activeTab === 'crop' && (
             <CropView
-              activeLocation={locationName}
+              activeLocation={location.name}
               weatherData={weatherData}
               soilData={soilData}
               onUpdateSoil={handleUpdateSoil}
@@ -203,6 +220,8 @@ export default function App() {
 
           {activeTab === 'fertilizer' && (
             <FertilizerView
+              activeLocation={location.name}
+              weatherData={weatherData}
               initialCrop={recommendation?.crop}
               soilData={soilData}
               onUpdateSoil={handleUpdateSoil}
@@ -211,7 +230,8 @@ export default function App() {
 
           {activeTab === 'irrigation' && (
             <IrrigationView
-              activeLocation={locationName}
+              activeLocation={location.name}
+              weatherData={weatherData}
               initialCrop={recommendation?.crop}
               soilData={soilData}
               farmArea={farmArea}
@@ -224,6 +244,8 @@ export default function App() {
 
           {activeTab === 'harvest' && (
             <HarvestView
+              activeLocation={location.name}
+              weatherData={weatherData}
               initialCrop={recommendation?.crop}
               farmArea={farmArea}
               farmAreaUnit={farmAreaUnit}
@@ -236,6 +258,7 @@ export default function App() {
 
           {activeTab === 'weather' && (
             <WeatherView
+              locationName={location.name}
               weatherData={weatherData}
               onSearchCity={handleLocationSelect}
               onDetectGPS={handleDetectGPS}

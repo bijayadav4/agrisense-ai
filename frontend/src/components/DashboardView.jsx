@@ -18,7 +18,7 @@ import {
 import { downloadReportCardPdf } from '../services/api';
 
 export default function DashboardView({ 
-  locationName = 'Coimbatore, Tamil Nadu',
+  locationName = '',
   weatherData, 
   recommendation, 
   farmArea = 2.0,

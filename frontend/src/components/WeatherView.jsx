@@ -18,7 +18,7 @@ const POPULAR_CITIES = [
   'Hyderabad, Telangana', 'Bengaluru, Karnataka', 'Patna, Bihar'
 ];
 
-export default function WeatherView({ weatherData, onSearchCity, onDetectGPS, detectingGPS }) {
+export default function WeatherView({ locationName, weatherData, onSearchCity, onDetectGPS, detectingGPS }) {
   const [cityInput, setCityInput] = useState('');
 
   const temp = weatherData?.temperature !== undefined ? weatherData.temperature : '--';
@@ -28,7 +28,8 @@ export default function WeatherView({ weatherData, onSearchCity, onDetectGPS, de
   const precipChance = weatherData?.precipitation_chance !== undefined ? weatherData.precipitation_chance : null;
   const windSpeed = weatherData?.wind_speed !== undefined ? weatherData.wind_speed : '--';
   const condition = weatherData?.condition || 'Updating...';
-  const city = weatherData?.city || 'Select Location';
+  const displayLocation = locationName || weatherData?.city || 'Select Location';
+  const isFallback = Boolean(weatherData?.forecast_source && weatherData.forecast_source.toLowerCase().includes('fallback'));
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -107,10 +108,30 @@ export default function WeatherView({ weatherData, onSearchCity, onDetectGPS, de
         <div className="card-title-row">
           <div className="card-title-left">
             <span style={{ fontSize: '1.2rem' }}>📍</span>
-            <h3>Current Climate in {city}</h3>
+            <h3>Current Climate in {displayLocation}</h3>
           </div>
           <span className="badge-tag badge-blue" style={{ fontSize: '0.85rem' }}>{condition}</span>
         </div>
+
+        {/* Fallback Regional Baseline Notice */}
+        {isFallback && (
+          <div style={{
+            margin: '0 0 16px 0',
+            padding: '8px 14px',
+            borderRadius: '8px',
+            background: '#fef3c7',
+            border: '1px solid #fde68a',
+            color: '#92400e',
+            fontSize: '0.82rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontWeight: 600
+          }}>
+            <AlertTriangle size={16} style={{ flexShrink: 0, color: '#d97706' }} />
+            <span>Regional baseline, not live — Telemetry using agro-climatic baseline averages.</span>
+          </div>
+        )}
 
         <div className="weather-metrics-grid">
           <div className="weather-metric-tile">
@@ -180,7 +201,7 @@ export default function WeatherView({ weatherData, onSearchCity, onDetectGPS, de
       <div className="dashboard-card">
         <div className="card-title-row">
           <div className="card-title-left">
-            <h3>Field Operation Advisories for {city}</h3>
+            <h3>Field Operation Advisories for {displayLocation}</h3>
           </div>
         </div>
 
