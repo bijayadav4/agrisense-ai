@@ -814,6 +814,19 @@ export default function CropView({ activeLocation, weatherData, soilData, onUpda
             }}>
               Data source: {recommendation.data_source || (recommendation.is_estimated ? 'Demo input (fixed weather)' : 'User entered')}
             </span>
+            {recommendation.is_estimated && recommendation.is_ambiguous && (
+              <span style={{
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                padding: '2px 8px',
+                borderRadius: '4px',
+                background: '#fee2e2',
+                color: '#b91c1c',
+                border: '1px solid #fca5a5'
+              }}>
+                Ambiguous
+              </span>
+            )}
           </div>
 
           {/* Amber Note if Demo Estimated */}

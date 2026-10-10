@@ -238,6 +238,43 @@ def generate_farmer_report_card(data):
         else:
             soil_display = soil_name
 
+    # Extract crop data early to assess ambiguity and tags for the metadata card
+    crop_data = data.get("crop_data", {})
+    top_crops = crop_data.get("top_crops", []) if isinstance(crop_data.get("top_crops"), list) else []
+    is_ml_model = bool(top_crops and len(top_crops) > 0)
+    primary_crop = str(crop_data.get("crop", "")).capitalize() if crop_data.get("crop") else ""
+
+    is_ambiguous = bool(crop_data.get("is_ambiguous", False) or data.get("is_ambiguous", False))
+    ambiguity_warning = crop_data.get("ambiguity_warning") or data.get("ambiguity_warning")
+    season_warning = crop_data.get("season_warning") or data.get("season_warning")
+    provenance_note = crop_data.get("provenance_note") or data.get("provenance_note")
+
+    # Ambiguity check: Top-1 vs Top-2 crop confidence gap < 15% (0.15)
+    if len(top_crops) >= 2:
+        def _parse_prob(item):
+            if item.get("probability") is not None:
+                p = float(item["probability"])
+                return p if p <= 1.0 else p / 100.0
+            if item.get("confidence") is not None:
+                return float(item["confidence"]) / 100.0
+            return 0.0
+
+        p1_f = _parse_prob(top_crops[0])
+        p2_f = _parse_prob(top_crops[1])
+        prob_gap = round(p1_f - p2_f, 4)
+        if prob_gap < 0.15:
+            is_ambiguous = True
+            if not ambiguity_warning:
+                c1 = str(top_crops[0].get("crop", "")).capitalize()
+                c2 = str(top_crops[1].get("crop", "")).capitalize()
+                conf1 = round(p1_f * 100, 1)
+                conf2 = round(p2_f * 100, 1)
+                ambiguity_warning = (
+                    f"Ambiguous prediction: Confidence gap between '{c1}' ({conf1}%) and '{c2}' ({conf2}%) "
+                    f"is only {round(prob_gap * 100, 1)}% (<15%). "
+                    "Soil and climate conditions overlap between these crops; field validation recommended."
+                )
+
     raw_data_source = str(data.get("data_source", "")).strip()
     is_estimated_flag = bool(data.get("is_estimated", False))
 
@@ -254,12 +291,17 @@ def generate_farmer_report_card(data):
         data_source = "Demo input (fixed weather)" if is_estimated_flag else "User entered"
         is_estimated = is_estimated_flag
 
+    # Tag demo mode with [Ambiguous] when prediction is ambiguous
+    if is_estimated and is_ambiguous:
+        if "[ambiguous]" not in data_source.lower():
+            data_source = f"{data_source} [Ambiguous]"
+
     n_val = data.get("N", data.get("crop_data", {}).get("N", "—"))
     p_val = data.get("P", data.get("crop_data", {}).get("P", "—"))
     k_val = data.get("K", data.get("crop_data", {}).get("K", "—"))
     ph_val = data.get("ph", data.get("crop_data", {}).get("ph", "—"))
 
-    input_source_desc = "Pre-set demo baseline" if (is_estimated or data_source == "Demo estimated") else ("Soil Health Card" if data_source == "Lab test" else "User entered values")
+    input_source_desc = "Pre-set demo baseline" if (is_estimated or "demo" in data_source.lower()) else ("Soil Health Card" if data_source == "Lab test" else "User entered values")
 
     # Col 1 width 175pt guarantees "Location: Coimbatore, Tamil Nadu" fits on a single line
     farmer_meta_data = [
@@ -348,11 +390,6 @@ def generate_farmer_report_card(data):
 
     story.append(Spacer(1, 2.5))
 
-    crop_data = data.get("crop_data", {})
-    top_crops = crop_data.get("top_crops", []) if isinstance(crop_data.get("top_crops"), list) else []
-    is_ml_model = bool(top_crops and len(top_crops) > 0)
-    primary_crop = str(crop_data.get("crop", "")).capitalize() if crop_data.get("crop") else ""
-
     # Input and Weather Telemetry Dates
     input_date_str = str(data.get("input_date") or date_str).strip()
     incoming_sched = data.get("irrigation_data", {}).get("weekly_schedule") or data.get("irrigation_data", {}).get("forecast") or []
@@ -368,11 +405,6 @@ def generate_farmer_report_card(data):
         )
     )
     story.append(Spacer(1, 1.5))
-
-    is_ambiguous = crop_data.get("is_ambiguous", False)
-    ambiguity_warning = crop_data.get("ambiguity_warning")
-    season_warning = crop_data.get("season_warning")
-    provenance_note = crop_data.get("provenance_note")
 
     if is_ml_model:
         include_normalized = bool(
@@ -505,10 +537,11 @@ def generate_farmer_report_card(data):
 
     # Warnings (Ambiguity / Out-of-Season / Provenance)
     warning_elements = []
-    if is_ambiguous and ambiguity_warning:
-        warning_elements.append(Paragraph(f"<b>Ambiguity Advisory:</b> {ambiguity_warning}", warning_style))
+    if is_ambiguous:
+        warn_text = ambiguity_warning or "Ambiguous prediction: Confidence gap between top-1 and top-2 crops is less than 15%. Soil and climate conditions overlap between these crops; field validation recommended."
+        warning_elements.append(Paragraph(f"<b>Ambiguity Advisory:</b> {safe_unicode_text(warn_text)}", warning_style))
     if season_warning:
-        warning_elements.append(Paragraph(f"<b>Seasonal Advisory:</b> {season_warning}", warning_style))
+        warning_elements.append(Paragraph(f"<b>Seasonal Advisory:</b> {safe_unicode_text(season_warning)}", warning_style))
     if provenance_note or primary_crop.lower() == "wheat":
         warning_elements.append(
             Paragraph(

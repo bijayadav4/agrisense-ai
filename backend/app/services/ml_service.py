@@ -853,6 +853,10 @@ class MLService:
                 f"Current month ({current_month_name}) is outside the recommended sowing window. {season_notes}"
             )
 
+        is_demo_mode = ("demo" in str(data.get("data_source", "")).lower()) or bool(data.get("is_estimated", False))
+        ambiguous_tag = "ambiguous" if (is_ambiguous and is_demo_mode) else None
+        data_source_str = str(data.get("data_source", "User entered")).strip()
+
         return {
             "crop": primary_crop,
             "confidence": confidence,
@@ -861,6 +865,7 @@ class MLService:
             "is_ambiguous": is_ambiguous,
             "ambiguity_warning": ambiguity_warning,
             "confidence_gap": prob_gap,
+            "ambiguous_tag": ambiguous_tag,
             "is_out_of_season": is_out_of_season,
             "season_warning": season_warning,
             "season_info": {
@@ -871,9 +876,9 @@ class MLService:
                 "notes": season_notes,
             },
             "provenance_note": "Limited benchmark data (synthetic ICAR extension)" if primary_crop == "wheat" else None,
-            "data_source": str(data.get("data_source", "User entered")).strip(),
-            "is_estimated": ("demo" in str(data.get("data_source", "")).lower()) or bool(data.get("is_estimated", False)),
-            "estimated_warning": "Estimated values. Please confirm with a lab test." if (("demo" in str(data.get("data_source", "")).lower()) or bool(data.get("is_estimated", False))) else None,
+            "data_source": data_source_str,
+            "is_estimated": is_demo_mode,
+            "estimated_warning": "Estimated values. Please confirm with a lab test." if is_demo_mode else None,
             "alternatives": alternatives,
             "soil_health": soil_health,
             "soil_amendments": soil_amendments,

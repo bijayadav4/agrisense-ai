@@ -58,7 +58,7 @@ export default function DashboardView({
         area_unit: farmAreaUnit || "Acres",
         soil_type: recommendation?.soil_type || null,
         soil_source: recommendation?.soil_source || null,
-        data_source: recommendation?.data_source || (isDemo ? "Demo input (fixed weather)" : "User entered"),
+        data_source: recommendation?.data_source || (isDemo ? (recommendation?.is_ambiguous ? "Demo input (fixed weather) [Ambiguous]" : "Demo input (fixed weather)") : "User entered"),
         is_estimated: isDemo || Boolean(recommendation?.is_estimated),
         N: recommendation?.N !== undefined ? recommendation.N : "85",
         P: recommendation?.P !== undefined ? recommendation.P : "48",

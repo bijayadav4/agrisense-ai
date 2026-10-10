@@ -92,6 +92,7 @@ def recommend_crop():
                 "provenance_note": result.get("provenance_note"),
                 "data_source": result.get("data_source", "User entered"),
                 "is_estimated": result.get("is_estimated", False),
+                "ambiguous_tag": result.get("ambiguous_tag"),
                 "estimated_warning": result.get("estimated_warning"),
                 "alternatives": result["alternatives"],
                 "soil_health": result["soil_health"],

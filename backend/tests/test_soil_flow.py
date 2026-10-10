@@ -748,6 +748,80 @@ class SoilFlowAuditTestCase(unittest.TestCase):
         self.assertIn("Fallback", text)
         self.assertNotIn("Live Telemetry", text)
 
+    def test_mode_b1_rice_jute_ambiguity_warning_and_demo_tag(self):
+        """STEP 5: Ambiguity:
+        - Mode B1: N=85, P=48, K=40, ph=6.4, temp=25, hum=80, rain=200
+        - Returns Top-1 Rice (51%) and Top-2 Jute (49%) with confidence gap = 2% (< 15%)
+        - Prediction marks is_ambiguous: True and demo ambiguous_tag: 'ambiguous'
+        - PDF report renders 'Ambiguity Advisory' warning and '[Ambiguous]' tag in demo data source
+        """
+        # Step 1: Predict with Mode B1 inputs
+        pred_res = self.client.post("/api/crop/recommend", json={
+            "N": 85,
+            "P": 48,
+            "K": 40,
+            "ph": 6.4,
+            "temperature": 25,
+            "humidity": 80,
+            "rainfall": 200,
+            "data_source": "Demo input (fixed weather)",
+            "is_estimated": True,
+        })
+        self.assertEqual(pred_res.status_code, 200)
+        pred_data = pred_res.get_json()
+        self.assertEqual(pred_data["crop"], "rice")
+        self.assertTrue(pred_data["is_ambiguous"])
+        self.assertLess(pred_data["confidence_gap"], 0.15)
+        self.assertEqual(pred_data.get("ambiguous_tag"), "ambiguous")
+        self.assertIn("Ambiguous prediction", pred_data["ambiguity_warning"])
+
+        # Step 2: Generate PDF report with Mode B1 prediction
+        pdf_payload = {
+            "farmer_name": "Demo Farmer",
+            "location": "Coimbatore, Tamil Nadu",
+            "area": 1.0,
+            "area_unit": "Acres",
+            "data_source": pred_data.get("data_source", "Demo input (fixed weather)"),
+            "is_estimated": True,
+            "crop_data": {
+                "crop": pred_data["crop"],
+                "confidence": pred_data["confidence"],
+                "top_crops": pred_data["top_crops"],
+                "is_ambiguous": pred_data["is_ambiguous"],
+                "ambiguity_warning": pred_data["ambiguity_warning"],
+            },
+        }
+        res = self.client.post("/api/report/generate", json=pdf_payload)
+        self.assertEqual(res.status_code, 200)
+        text = "".join([p.extract_text() for p in PdfReader(io.BytesIO(res.data)).pages])
+        self.assertIn("Ambiguity Advisory", text)
+        self.assertIn("Ambiguous", text)
+        self.assertIn("Rice", text)
+        self.assertIn("[Ambiguous]", text)
+        self.assertIn("Demo input", text)
+
+        # Step 3: Verify auto-detection of ambiguity in report service when gap < 15% even without explicit flag
+        pdf_payload_auto = {
+            "farmer_name": "Demo Farmer",
+            "location": "Coimbatore, Tamil Nadu",
+            "area": 1.0,
+            "area_unit": "Acres",
+            "data_source": "Demo input (fixed weather)",
+            "is_estimated": True,
+            "crop_data": {
+                "crop": "Rice",
+                "top_crops": [
+                    {"crop": "Rice", "probability": 0.51, "confidence": 51.0},
+                    {"crop": "Jute", "probability": 0.49, "confidence": 49.0},
+                ],
+            },
+        }
+        res_auto = self.client.post("/api/report/generate", json=pdf_payload_auto)
+        self.assertEqual(res_auto.status_code, 200)
+        text_auto = "".join([p.extract_text() for p in PdfReader(io.BytesIO(res_auto.data)).pages])
+        self.assertIn("Ambiguity Advisory", text_auto)
+        self.assertIn("Ambiguous", text_auto)
+
 
 if __name__ == "__main__":
     unittest.main()
