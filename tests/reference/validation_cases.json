@@ -1,0 +1,814 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "description": "Ground-truth multi-crop reference validation dataset for AgriSense AI system validation",
+    "created_at": "2026-10-10",
+    "total_cases": 10,
+    "unique_crops_count": 6,
+    "locations_count": 5
+  },
+  "holdout_soil_images_5": [
+    {
+      "soil_class": "Black",
+      "filename": "Black_Soil_107.jpg",
+      "filepath": "ml_models/datasets/soil_images/Black/Black_Soil_107.jpg",
+      "md5": "f8f9078aab4a3958ded91ace9e8af3ca",
+      "source_dataset": "soil_split_test.csv (144 pure original photos)",
+      "source_verified": true
+    },
+    {
+      "soil_class": "Clayey",
+      "filename": "Yellow_Soil_34.jpg",
+      "filepath": "ml_models/datasets/soil_images/Clayey/Yellow_Soil_34.jpg",
+      "md5": "bcc932ac51ef9b16230b0902084099d6",
+      "source_dataset": "soil_split_test.csv (144 pure original photos)",
+      "source_verified": true
+    },
+    {
+      "soil_class": "Loamy",
+      "filename": "Alluvial_Soil_105.jpg",
+      "filepath": "ml_models/datasets/soil_images/Loamy/Alluvial_Soil_105.jpg",
+      "md5": "e00da0df36fcd6f3026acb1a76a1e10d",
+      "source_dataset": "soil_split_test.csv (144 pure original photos)",
+      "source_verified": true
+    },
+    {
+      "soil_class": "Red",
+      "filename": "Red_Soil_15.jpg",
+      "filepath": "ml_models/datasets/soil_images/Red/Red_Soil_15.jpg",
+      "md5": "5435a0aeb59fffa262c4bf68de927f1a",
+      "source_dataset": "soil_split_test.csv (144 pure original photos)",
+      "source_verified": true
+    },
+    {
+      "soil_class": "Sandy",
+      "filename": "Arid_Soil_160.jpg",
+      "filepath": "ml_models/datasets/soil_images/Sandy/Arid_Soil_160.jpg",
+      "md5": "7deb086ddb68100e8abed6ef8a279ce8",
+      "source_dataset": "soil_split_test.csv (144 pure original photos)",
+      "source_verified": true
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "CASE-01",
+      "crop": "Rice",
+      "crop_display": "Paddy (Rice)",
+      "location": {
+        "name": "Thanjavur, Tamil Nadu",
+        "latitude": 10.787,
+        "longitude": 79.1378,
+        "region": "Cauvery Delta Zone"
+      },
+      "inputs": {
+        "N": 85.0,
+        "P": 45.0,
+        "K": 40.0,
+        "ph": 6.8,
+        "temperature": 28.5,
+        "humidity": 82.0,
+        "rainfall": 210.0,
+        "area": 2.0,
+        "area_unit": "Acres",
+        "sowing_date": "2024-06-15",
+        "soil_type": "Clayey"
+      },
+      "expected_fertilizer": {
+        "target_dose_kg_ha": {
+          "N": 120.0,
+          "P2O5": 60.0,
+          "K2O": 40.0
+        },
+        "tnau_dose_kg_ha": {
+          "N": 150.0,
+          "P2O5": 50.0,
+          "K2O": 50.0
+        },
+        "source": "ICAR Standard Recommended Dose of Fertilizer (RDF) / TNAU Crop Production Guide (2020), Wetland Rice, Page 15",
+        "source_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "expected_harvest": {
+        "duration_days": 125,
+        "duration_source": "ICAR-NRRI Cereal Benchmark 2023-24 / TNAU Agritech Portal (Medium Duration varieties ADT 39, IR 20)",
+        "duration_verified": true,
+        "yield_benchmark_q_ha": 48.0,
+        "yield_source": "ICAR-NRRI Cereal Yield Benchmark 2023-24",
+        "yield_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "expected_irrigation_et0": {
+        "source": "Open-Meteo Historical Archive API (archive-api.open-meteo.com), metric=et0_fao_evapotranspiration",
+        "date_range": [
+          "2024-06-15",
+          "2024-06-21"
+        ],
+        "daily_dates": [
+          "2024-06-15",
+          "2024-06-16",
+          "2024-06-17",
+          "2024-06-18",
+          "2024-06-19",
+          "2024-06-20",
+          "2024-06-21"
+        ],
+        "daily_et0_mm": [
+          6.18,
+          6.13,
+          5.98,
+          4.8,
+          5.21,
+          4.78,
+          6.94
+        ],
+        "mean_et0_mm": 5.72,
+        "source_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "soil_holdout_test": {
+        "filename": "Yellow_Soil_34.jpg",
+        "expected_class": "Clayey",
+        "source_verified": true
+      }
+    },
+    {
+      "case_id": "CASE-02",
+      "crop": "Rice",
+      "crop_display": "Paddy (Rice)",
+      "location": {
+        "name": "Madurai, Tamil Nadu",
+        "latitude": 9.9252,
+        "longitude": 78.1198,
+        "region": "Southern Zone"
+      },
+      "inputs": {
+        "N": 80.0,
+        "P": 40.0,
+        "K": 38.0,
+        "ph": 6.7,
+        "temperature": 29.0,
+        "humidity": 80.0,
+        "rainfall": 195.0,
+        "area": 1.5,
+        "area_unit": "Acres",
+        "sowing_date": "2024-08-01",
+        "soil_type": "Clayey"
+      },
+      "expected_fertilizer": {
+        "target_dose_kg_ha": {
+          "N": 120.0,
+          "P2O5": 60.0,
+          "K2O": 40.0
+        },
+        "tnau_dose_kg_ha": {
+          "N": 150.0,
+          "P2O5": 50.0,
+          "K2O": 50.0
+        },
+        "source": "ICAR Standard Recommended Dose of Fertilizer (RDF) / TNAU Crop Production Guide (2020), Wetland Rice, Page 15",
+        "source_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "expected_harvest": {
+        "duration_days": 125,
+        "duration_source": "ICAR-NRRI Cereal Benchmark 2023-24",
+        "duration_verified": true,
+        "yield_benchmark_q_ha": 48.0,
+        "yield_source": "ICAR-NRRI Cereal Yield Benchmark 2023-24",
+        "yield_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "expected_irrigation_et0": {
+        "source": "Open-Meteo Historical Archive API (archive-api.open-meteo.com), metric=et0_fao_evapotranspiration",
+        "date_range": [
+          "2024-08-01",
+          "2024-08-07"
+        ],
+        "daily_dates": [
+          "2024-08-01",
+          "2024-08-02",
+          "2024-08-03",
+          "2024-08-04",
+          "2024-08-05",
+          "2024-08-06",
+          "2024-08-07"
+        ],
+        "daily_et0_mm": [
+          6.66,
+          5.71,
+          5.61,
+          5.24,
+          4.94,
+          4.69,
+          4.48
+        ],
+        "mean_et0_mm": 5.33,
+        "source_verified": true,
+        "verification_status": "VERIFIED"
+      }
+    },
+    {
+      "case_id": "CASE-03",
+      "crop": "Wheat",
+      "crop_display": "Wheat",
+      "location": {
+        "name": "Ludhiana, Punjab",
+        "latitude": 30.901,
+        "longitude": 75.8573,
+        "region": "Indo-Gangetic Plain / North-Western Plains Zone"
+      },
+      "inputs": {
+        "N": 90.0,
+        "P": 50.0,
+        "K": 45.0,
+        "ph": 7.2,
+        "temperature": 18.0,
+        "humidity": 65.0,
+        "rainfall": 80.0,
+        "area": 3.0,
+        "area_unit": "Acres",
+        "sowing_date": "2024-11-10",
+        "soil_type": "Loamy"
+      },
+      "expected_fertilizer": {
+        "target_dose_kg_ha": {
+          "N": 120.0,
+          "P2O5": 60.0,
+          "K2O": 40.0
+        },
+        "source": "PAU Package of Practices for Rabi Crops (2023-24), Punjab Agricultural University Ludhiana, Wheat, Page 12 / ICAR-IIWBR Karnal",
+        "source_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "expected_harvest": {
+        "duration_days": 120,
+        "duration_source": "ICAR-IIWBR Rabi Benchmark 2023-24 / PAU Ludhiana",
+        "duration_verified": true,
+        "yield_benchmark_q_ha": 42.0,
+        "yield_source": "ICAR-IIWBR Rabi Benchmark 2023-24",
+        "yield_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "expected_irrigation_et0": {
+        "source": "Open-Meteo Historical Archive API (archive-api.open-meteo.com), metric=et0_fao_evapotranspiration",
+        "date_range": [
+          "2024-11-10",
+          "2024-11-16"
+        ],
+        "daily_dates": [
+          "2024-11-10",
+          "2024-11-11",
+          "2024-11-12",
+          "2024-11-13",
+          "2024-11-14",
+          "2024-11-15",
+          "2024-11-16"
+        ],
+        "daily_et0_mm": [
+          2.51,
+          2.63,
+          2.46,
+          2.32,
+          2.23,
+          2.31,
+          2.05
+        ],
+        "mean_et0_mm": 2.36,
+        "source_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "soil_holdout_test": {
+        "filename": "Alluvial_Soil_105.jpg",
+        "expected_class": "Loamy",
+        "source_verified": true
+      }
+    },
+    {
+      "case_id": "CASE-04",
+      "crop": "Wheat",
+      "crop_display": "Wheat",
+      "location": {
+        "name": "Nashik, Maharashtra",
+        "latitude": 19.9975,
+        "longitude": 73.7898,
+        "region": "Peninsular Zone"
+      },
+      "inputs": {
+        "N": 85.0,
+        "P": 45.0,
+        "K": 40.0,
+        "ph": 7.5,
+        "temperature": 21.0,
+        "humidity": 55.0,
+        "rainfall": 60.0,
+        "area": 2.5,
+        "area_unit": "Acres",
+        "sowing_date": "2024-11-15",
+        "soil_type": "Black"
+      },
+      "expected_fertilizer": {
+        "target_dose_kg_ha": {
+          "N": 120.0,
+          "P2O5": 60.0,
+          "K2O": 40.0
+        },
+        "source": "MPKV Rahuri / ICAR-IIWBR Peninsular Zone Wheat Guidelines (2023-24)",
+        "source_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "expected_harvest": {
+        "duration_days": 120,
+        "duration_source": "ICAR-IIWBR Rabi Benchmark 2023-24",
+        "duration_verified": true,
+        "yield_benchmark_q_ha": 42.0,
+        "yield_source": "ICAR-IIWBR Rabi Benchmark 2023-24",
+        "yield_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "expected_irrigation_et0": {
+        "source": "Open-Meteo Historical Archive API (archive-api.open-meteo.com), metric=et0_fao_evapotranspiration",
+        "date_range": [
+          "2024-11-15",
+          "2024-11-21"
+        ],
+        "daily_dates": [
+          "2024-11-15",
+          "2024-11-16",
+          "2024-11-17",
+          "2024-11-18",
+          "2024-11-19",
+          "2024-11-20",
+          "2024-11-21"
+        ],
+        "daily_et0_mm": [
+          4.29,
+          4.23,
+          4.5,
+          4.83,
+          4.66,
+          4.61,
+          4.32
+        ],
+        "mean_et0_mm": 4.49,
+        "source_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "soil_holdout_test": {
+        "filename": "Black_Soil_107.jpg",
+        "expected_class": "Black",
+        "source_verified": true
+      }
+    },
+    {
+      "case_id": "CASE-05",
+      "crop": "Maize",
+      "crop_display": "Maize (Corn)",
+      "location": {
+        "name": "Coimbatore, Tamil Nadu",
+        "latitude": 11.0168,
+        "longitude": 76.9558,
+        "region": "Western Zone"
+      },
+      "inputs": {
+        "N": 80.0,
+        "P": 45.0,
+        "K": 35.0,
+        "ph": 6.5,
+        "temperature": 26.5,
+        "humidity": 70.0,
+        "rainfall": 95.0,
+        "area": 2.0,
+        "area_unit": "Acres",
+        "sowing_date": "2024-07-01",
+        "soil_type": "Red"
+      },
+      "expected_fertilizer": {
+        "target_dose_kg_ha": {
+          "N": 120.0,
+          "P2O5": 60.0,
+          "K2O": 50.0
+        },
+        "tnau_dose_kg_ha": {
+          "N": 135.0,
+          "P2O5": 62.5,
+          "K2O": 50.0
+        },
+        "source": "ICAR-IIMR Standard Recommendation / TNAU Crop Production Guide (2020), Irrigated Hybrid Maize, Page 42",
+        "source_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "expected_harvest": {
+        "duration_days": 105,
+        "duration_source": "ICAR-IIMR Hybrid Benchmark 2023-24 / TNAU Agritech Portal",
+        "duration_verified": true,
+        "yield_benchmark_q_ha": 55.0,
+        "yield_source": "ICAR-IIMR Hybrid Benchmark 2023-24",
+        "yield_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "expected_irrigation_et0": {
+        "source": "Open-Meteo Historical Archive API (archive-api.open-meteo.com), metric=et0_fao_evapotranspiration",
+        "date_range": [
+          "2024-07-01",
+          "2024-07-07"
+        ],
+        "daily_dates": [
+          "2024-07-01",
+          "2024-07-02",
+          "2024-07-03",
+          "2024-07-04",
+          "2024-07-05",
+          "2024-07-06",
+          "2024-07-07"
+        ],
+        "daily_et0_mm": [
+          3.5,
+          3.58,
+          4.43,
+          3.6,
+          4.52,
+          2.94,
+          4.16
+        ],
+        "mean_et0_mm": 3.82,
+        "source_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "soil_holdout_test": {
+        "filename": "Red_Soil_15.jpg",
+        "expected_class": "Red",
+        "source_verified": true
+      }
+    },
+    {
+      "case_id": "CASE-06",
+      "crop": "Maize",
+      "crop_display": "Maize (Corn)",
+      "location": {
+        "name": "Ludhiana, Punjab",
+        "latitude": 30.901,
+        "longitude": 75.8573,
+        "region": "North-Western Zone"
+      },
+      "inputs": {
+        "N": 85.0,
+        "P": 40.0,
+        "K": 40.0,
+        "ph": 7.0,
+        "temperature": 32.0,
+        "humidity": 65.0,
+        "rainfall": 105.0,
+        "area": 1.0,
+        "area_unit": "Hectare",
+        "sowing_date": "2024-06-20",
+        "soil_type": "Loamy"
+      },
+      "expected_fertilizer": {
+        "target_dose_kg_ha": {
+          "N": 120.0,
+          "P2O5": 60.0,
+          "K2O": 50.0
+        },
+        "source": "PAU Package of Practices for Kharif Crops (2024), Maize, Page 18 / ICAR-IIMR",
+        "source_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "expected_harvest": {
+        "duration_days": 105,
+        "duration_source": "ICAR-IIMR Hybrid Benchmark 2023-24",
+        "duration_verified": true,
+        "yield_benchmark_q_ha": 55.0,
+        "yield_source": "ICAR-IIMR Hybrid Benchmark 2023-24",
+        "yield_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "expected_irrigation_et0": {
+        "source": "Open-Meteo Historical Archive API (archive-api.open-meteo.com), metric=et0_fao_evapotranspiration",
+        "date_range": [
+          "2024-06-20",
+          "2024-06-26"
+        ],
+        "daily_dates": [
+          "2024-06-20",
+          "2024-06-21",
+          "2024-06-22",
+          "2024-06-23",
+          "2024-06-24",
+          "2024-06-25",
+          "2024-06-26"
+        ],
+        "daily_et0_mm": [
+          5.65,
+          4.56,
+          5.61,
+          6.04,
+          6.63,
+          5.83,
+          6.16
+        ],
+        "mean_et0_mm": 5.78,
+        "source_verified": true,
+        "verification_status": "VERIFIED"
+      }
+    },
+    {
+      "case_id": "CASE-07",
+      "crop": "Cotton",
+      "crop_display": "Cotton",
+      "location": {
+        "name": "Coimbatore, Tamil Nadu",
+        "latitude": 11.0168,
+        "longitude": 76.9558,
+        "region": "Western Zone"
+      },
+      "inputs": {
+        "N": 90.0,
+        "P": 45.0,
+        "K": 42.0,
+        "ph": 7.3,
+        "temperature": 27.5,
+        "humidity": 75.0,
+        "rainfall": 80.0,
+        "area": 2.0,
+        "area_unit": "Acres",
+        "sowing_date": "2024-08-15",
+        "soil_type": "Black"
+      },
+      "expected_fertilizer": {
+        "target_dose_kg_ha": {
+          "N": 100.0,
+          "P2O5": 50.0,
+          "K2O": 50.0
+        },
+        "tnau_dose_kg_ha": {
+          "N": 120.0,
+          "P2O5": 60.0,
+          "K2O": 60.0
+        },
+        "source": "ICAR-CICR Cotton Benchmark / TNAU Crop Production Guide (2020), Irrigated Hybrid Cotton, Page 110",
+        "source_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "expected_harvest": {
+        "duration_days": 160,
+        "duration_source": "ICAR-CICR Cotton Benchmark 2023-24 / TNAU Agritech Portal",
+        "duration_verified": true,
+        "yield_benchmark_q_ha": 22.0,
+        "yield_source": "ICAR-CICR Cotton Benchmark 2023-24",
+        "yield_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "expected_irrigation_et0": {
+        "source": "Open-Meteo Historical Archive API (archive-api.open-meteo.com), metric=et0_fao_evapotranspiration",
+        "date_range": [
+          "2024-08-15",
+          "2024-08-21"
+        ],
+        "daily_dates": [
+          "2024-08-15",
+          "2024-08-16",
+          "2024-08-17",
+          "2024-08-18",
+          "2024-08-19",
+          "2024-08-20",
+          "2024-08-21"
+        ],
+        "daily_et0_mm": [
+          4.14,
+          3.94,
+          5.19,
+          4.81,
+          4.18,
+          4.38,
+          4.87
+        ],
+        "mean_et0_mm": 4.5,
+        "source_verified": true,
+        "verification_status": "VERIFIED"
+      }
+    },
+    {
+      "case_id": "CASE-08",
+      "crop": "Cotton",
+      "crop_display": "Cotton",
+      "location": {
+        "name": "Nashik, Maharashtra",
+        "latitude": 19.9975,
+        "longitude": 73.7898,
+        "region": "Khandesh / Central Maharashtra"
+      },
+      "inputs": {
+        "N": 95.0,
+        "P": 48.0,
+        "K": 45.0,
+        "ph": 7.4,
+        "temperature": 28.0,
+        "humidity": 78.0,
+        "rainfall": 120.0,
+        "area": 3.5,
+        "area_unit": "Acres",
+        "sowing_date": "2024-06-25",
+        "soil_type": "Black"
+      },
+      "expected_fertilizer": {
+        "target_dose_kg_ha": {
+          "N": 100.0,
+          "P2O5": 50.0,
+          "K2O": 50.0
+        },
+        "source": "MPKV Rahuri / ICAR-CICR Nagpur Package of Practices for Bt Cotton",
+        "source_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "expected_harvest": {
+        "duration_days": 160,
+        "duration_source": "ICAR-CICR Cotton Benchmark 2023-24",
+        "duration_verified": true,
+        "yield_benchmark_q_ha": 22.0,
+        "yield_source": "ICAR-CICR Cotton Benchmark 2023-24",
+        "yield_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "expected_irrigation_et0": {
+        "source": "Open-Meteo Historical Archive API (archive-api.open-meteo.com), metric=et0_fao_evapotranspiration",
+        "date_range": [
+          "2024-06-25",
+          "2024-07-01"
+        ],
+        "daily_dates": [
+          "2024-06-25",
+          "2024-06-26",
+          "2024-06-27",
+          "2024-06-28",
+          "2024-06-29",
+          "2024-06-30",
+          "2024-07-01"
+        ],
+        "daily_et0_mm": [
+          4.01,
+          3.18,
+          2.95,
+          2.66,
+          3.65,
+          2.8,
+          2.81
+        ],
+        "mean_et0_mm": 3.15,
+        "source_verified": true,
+        "verification_status": "VERIFIED"
+      }
+    },
+    {
+      "case_id": "CASE-09",
+      "crop": "Groundnut",
+      "crop_display": "Groundnut (Peanut)",
+      "location": {
+        "name": "Madurai, Tamil Nadu",
+        "latitude": 9.9252,
+        "longitude": 78.1198,
+        "region": "Southern Zone"
+      },
+      "inputs": {
+        "N": 35.0,
+        "P": 30.0,
+        "K": 45.0,
+        "ph": 6.3,
+        "temperature": 30.0,
+        "humidity": 68.0,
+        "rainfall": 85.0,
+        "area": 1.0,
+        "area_unit": "Acre",
+        "sowing_date": "2024-07-10",
+        "soil_type": "Red"
+      },
+      "expected_fertilizer": {
+        "target_dose_kg_ha": {
+          "N": 25.0,
+          "P2O5": 50.0,
+          "K2O": 75.0
+        },
+        "source": "TNAU Crop Production Guide (2020), Irrigated Groundnut, Page 78 / ICAR-DGR Junagadh",
+        "source_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "expected_harvest": {
+        "duration_days": 105,
+        "duration_source": "TNAU Agritech Portal (VRI 8 / TMV 13 variety)",
+        "duration_verified": true,
+        "yield_benchmark_q_ha": 25.0,
+        "yield_source": "UNVERIFIED: Groundnut is not present in crop_cycles.json or 22 ML classes (empirical local estimate)",
+        "yield_verified": false,
+        "verification_status": "UNVERIFIED"
+      },
+      "expected_irrigation_et0": {
+        "source": "Open-Meteo Historical Archive API (archive-api.open-meteo.com), metric=et0_fao_evapotranspiration",
+        "date_range": [
+          "2024-07-10",
+          "2024-07-16"
+        ],
+        "daily_dates": [
+          "2024-07-10",
+          "2024-07-11",
+          "2024-07-12",
+          "2024-07-13",
+          "2024-07-14",
+          "2024-07-15",
+          "2024-07-16"
+        ],
+        "daily_et0_mm": [
+          5.4,
+          5.63,
+          4.98,
+          5.25,
+          3.91,
+          3.83,
+          4.12
+        ],
+        "mean_et0_mm": 4.73,
+        "source_verified": true,
+        "verification_status": "VERIFIED"
+      }
+    },
+    {
+      "case_id": "CASE-10",
+      "crop": "Sugarcane",
+      "crop_display": "Sugarcane",
+      "location": {
+        "name": "Thanjavur, Tamil Nadu",
+        "latitude": 10.787,
+        "longitude": 79.1378,
+        "region": "Cauvery Delta Zone"
+      },
+      "inputs": {
+        "N": 120.0,
+        "P": 60.0,
+        "K": 60.0,
+        "ph": 7.0,
+        "temperature": 27.0,
+        "humidity": 75.0,
+        "rainfall": 120.0,
+        "area": 2.0,
+        "area_unit": "Acres",
+        "sowing_date": "2024-02-15",
+        "soil_type": "Loamy"
+      },
+      "expected_fertilizer": {
+        "target_dose_kg_ha": {
+          "N": 250.0,
+          "P2O5": 115.0,
+          "K2O": 115.0
+        },
+        "tnau_dose_kg_ha": {
+          "N": 275.0,
+          "P2O5": 62.5,
+          "K2O": 112.5
+        },
+        "source": "ICAR-SBI Coimbatore Standard / TNAU Crop Production Guide (2020), Sugarcane Plant Crop, Page 135",
+        "source_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "expected_harvest": {
+        "duration_days": 365,
+        "duration_source": "ICAR-SBI Sugarcane Benchmark 2023-24 / TNAU Agritech Portal",
+        "duration_verified": true,
+        "yield_benchmark_q_ha": 750.0,
+        "yield_source": "ICAR-SBI Sugarcane Benchmark 2023-24",
+        "yield_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "expected_irrigation_et0": {
+        "source": "Open-Meteo Historical Archive API (archive-api.open-meteo.com), metric=et0_fao_evapotranspiration",
+        "date_range": [
+          "2024-02-15",
+          "2024-02-21"
+        ],
+        "daily_dates": [
+          "2024-02-15",
+          "2024-02-16",
+          "2024-02-17",
+          "2024-02-18",
+          "2024-02-19",
+          "2024-02-20",
+          "2024-02-21"
+        ],
+        "daily_et0_mm": [
+          5.08,
+          5.22,
+          5.28,
+          5.33,
+          5.05,
+          4.99,
+          5.24
+        ],
+        "mean_et0_mm": 5.17,
+        "source_verified": true,
+        "verification_status": "VERIFIED"
+      },
+      "soil_holdout_test": {
+        "filename": "Arid_Soil_160.jpg",
+        "expected_class": "Sandy",
+        "source_verified": true
+      }
+    }
+  ]
+}
