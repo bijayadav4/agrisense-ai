@@ -26,9 +26,9 @@
     },
     {
       "soil_class": "Loamy",
-      "filename": "Alluvial_Soil_105.jpg",
-      "filepath": "ml_models/datasets/soil_images/Loamy/Alluvial_Soil_105.jpg",
-      "md5": "e00da0df36fcd6f3026acb1a76a1e10d",
+      "filename": "Alluvial_Soil_44.jpg",
+      "filepath": "ml_models/datasets/soil_images/Loamy/Alluvial_Soil_44.jpg",
+      "md5": "6ecf341c74159cd36f8e95af1a45fbe8",
       "source_dataset": "soil_split_test.csv (144 pure original photos)",
       "source_verified": true
     },
@@ -278,7 +278,7 @@
         "verification_status": "VERIFIED"
       },
       "soil_holdout_test": {
-        "filename": "Alluvial_Soil_105.jpg",
+        "filename": "Alluvial_Soil_44.jpg",
         "expected_class": "Loamy",
         "source_verified": true
       }
