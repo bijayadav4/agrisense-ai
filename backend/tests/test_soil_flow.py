@@ -652,6 +652,33 @@ class SoilFlowAuditTestCase(unittest.TestCase):
         self.assertNotIn("Live Telemetry", text)
         self.assertIn("Forecast Advisory: Forecast unavailable", text)
 
+    def test_live_telemetry_with_identical_7_days_triggers_forecast_advisory_warning(self):
+        """When forecast_source claims 'Live Telemetry' but 7 days have identical values:
+        - PDF report renders 'Forecast Advisory: Forecast unavailable' warning
+        - PDF report switches label to 'Fallback (Agro-climatic Regional Baseline)'
+        - PDF report does NOT claim 'Live Telemetry'
+        """
+        identical_schedule = [
+            {"day": f"Day {i}", "date": f"2026-10-{10+i}", "rainfall_mm": 0.0, "et0_mm": 5.0, "temp_max": 30.0}
+            for i in range(7)
+        ]
+        payload = {
+            "farmer_name": "Test Farmer",
+            "location": "Coimbatore, Tamil Nadu",
+            "area": 2.0,
+            "area_unit": "Acres",
+            "irrigation_data": {
+                "forecast_source": "Open-Meteo API (Live Telemetry)",
+                "weekly_schedule": identical_schedule,
+            },
+        }
+        res = self.client.post("/api/report/generate", json=payload)
+        self.assertEqual(res.status_code, 200)
+        text = "".join([p.extract_text() for p in PdfReader(io.BytesIO(res.data)).pages])
+        self.assertIn("Forecast Advisory: Forecast unavailable", text)
+        self.assertIn("Fallback", text)
+        self.assertNotIn("Live Telemetry", text)
+
 
 if __name__ == "__main__":
     unittest.main()

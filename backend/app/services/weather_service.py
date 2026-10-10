@@ -7,6 +7,9 @@ import requests
 
 from app.config import Config
 
+FALLBACK_FORECAST_SOURCE = "Fallback (Agro-climatic Regional Baseline)"
+LIVE_FORECAST_SOURCE = "Open-Meteo API (Live Telemetry)"
+
 
 def calculate_fao_extraterrestrial_radiation(lat_deg=18.52, day_of_year=None):
     """
@@ -283,6 +286,9 @@ def get_weather_data(location="Pune", lat=None, lon=None):
         resp = requests.get(w_url, timeout=3.5)
         if resp.status_code == 200:
             data = resp.json()
+            if not data or not data.get("current") or not data.get("daily", {}).get("time"):
+                raise ValueError("Incomplete or empty weather payload from Open-Meteo API")
+
             curr = data.get("current", {})
             daily = data.get("daily", {})
             hourly = data.get("hourly", {})
@@ -406,7 +412,7 @@ def get_weather_data(location="Pune", lat=None, lon=None):
                 "condition": condition,
                 "icon": icon,
                 "et0_fao_evapotranspiration": today_et0,
-                "forecast_source": "Open-Meteo API (Live Telemetry)",
+                "forecast_source": LIVE_FORECAST_SOURCE,
                 "forecast": forecast,
                 "advisory": generate_farmer_weather_advisory(temp, humidity, rain_chance, rainfall, wind_speed),
                 "location_mismatch": location_mismatch,
@@ -416,6 +422,8 @@ def get_weather_data(location="Pune", lat=None, lon=None):
             # Cache the result
             WEATHER_CACHE[cache_key] = (now, weather_res)
             return weather_res
+        else:
+            raise requests.HTTPError(f"Open-Meteo API returned HTTP {resp.status_code}")
 
     except Exception as e:
         print(f"⚠️ Open-Meteo query failed: {e}")
@@ -469,7 +477,7 @@ def get_weather_data(location="Pune", lat=None, lon=None):
                     "wind_speed": wind,
                     "condition": condition,
                     "icon": "⛅",
-                    "forecast_source": "Fallback (Agro-climatic Regional Baseline)",
+                    "forecast_source": FALLBACK_FORECAST_SOURCE,
                     "forecast": fallback_forecast,
                     "advisory": generate_farmer_weather_advisory(temp, humidity, 10, rain_mm, wind),
                     "location_mismatch": location_mismatch,
@@ -513,7 +521,7 @@ def get_weather_data(location="Pune", lat=None, lon=None):
         "wind_speed": 10.0,
         "condition": "Partly Cloudy",
         "icon": "⛅",
-        "forecast_source": "Fallback (Agro-climatic Regional Baseline)",
+        "forecast_source": FALLBACK_FORECAST_SOURCE,
         "forecast": baseline_forecast,
         "advisory": ["🌱 Regular Farm Operations: Good conditions for normal field work."],
         "location_mismatch": location_mismatch,

@@ -27,8 +27,13 @@ export default function DashboardView({
   onNavigateTab 
 }) {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const isWeatherLoading = !weatherData || !weatherData.forecast_source;
 
   const handleDownloadPdf = async () => {
+    if (isWeatherLoading) {
+      alert("Weather data is still loading. Please wait a moment before downloading the report.");
+      return;
+    }
     try {
       setIsGeneratingPdf(true);
       const isDemo = !recommendation;
@@ -219,24 +224,39 @@ export default function DashboardView({
           <button
             type="button"
             onClick={handleDownloadPdf}
-            disabled={isGeneratingPdf}
+            disabled={isGeneratingPdf || isWeatherLoading}
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
               padding: '8px 14px',
               borderRadius: '10px',
-              border: '1px solid #16a34a',
-              background: '#16a34a',
+              border: isWeatherLoading ? '1px solid #9ca3af' : '1px solid #16a34a',
+              background: isWeatherLoading ? '#9ca3af' : '#16a34a',
               color: '#ffffff',
               fontSize: '0.82rem',
               fontWeight: 700,
-              cursor: isGeneratingPdf ? 'wait' : 'pointer',
+              cursor: isWeatherLoading ? 'not-allowed' : (isGeneratingPdf ? 'wait' : 'pointer'),
+              opacity: isWeatherLoading ? 0.75 : 1,
               transition: 'all 0.15s ease'
             }}
           >
-            {isGeneratingPdf ? <Loader2 size={16} /> : <FileText size={16} />}
-            <span>{isGeneratingPdf ? 'Generating PDF...' : '📄 Download Report Card (PDF)'}</span>
+            {isWeatherLoading ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                <span>Weather loading...</span>
+              </>
+            ) : isGeneratingPdf ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                <span>Generating PDF...</span>
+              </>
+            ) : (
+              <>
+                <FileText size={16} />
+                <span>📄 Download Report Card (PDF)</span>
+              </>
+            )}
           </button>
 
           <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '8px 14px', textAlign: 'right' }}>
