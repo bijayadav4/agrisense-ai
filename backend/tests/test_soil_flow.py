@@ -470,7 +470,151 @@ class SoilFlowAuditTestCase(unittest.TestCase):
         text_c = "".join([p.extract_text() for p in PdfReader(io.BytesIO(res_c.data)).pages])
         self.assertIn("days remaining (harvest on", text_c)
 
+    def test_crop_raw_probabilities_and_conditional_agronomic_notes(self):
+        """Top-3 Crop table:
+        - Raw model probabilities are displayed (share of 22 classes), sum not forced to 100%.
+        - Agronomic Notes column present with header 'Agronomic Notes (General guidance)' when checks match.
+        - Agronomic Notes column omitted when checks do not match.
+        """
+        # Case A: Matching moisture/thermal checks present
+        payload_with_notes = {
+            "farmer_name": "Test Farmer",
+            "location": "Nashik, Maharashtra",
+            "area": 2.0,
+            "crop_data": {
+                "crop": "Rice",
+                "top_crops": [
+                    {"rank": 1, "crop": "Rice", "probability": 0.55},
+                    {"rank": 2, "crop": "Coconut", "probability": 0.16},
+                    {"rank": 3, "crop": "Pomegranate", "probability": 0.09},
+                ],
+            },
+            "rainfall": 200,
+            "temperature": 25,
+        }
+        res_a = self.client.post("/api/report/generate", json=payload_with_notes)
+        self.assertEqual(res_a.status_code, 200)
+        text_a = "".join([p.extract_text() for p in PdfReader(io.BytesIO(res_a.data)).pages])
+        self.assertIn("Raw Probability (%)", text_a)
+        self.assertIn("Agronomic Notes (General guidance)", text_a)
+        self.assertIn("55.0%", text_a)
+        self.assertIn("16.0%", text_a)
+        self.assertIn("9.0%", text_a)
+
+        # Case B: No agronomic checks match and no reasons provided -> column omitted
+        payload_no_notes = {
+            "farmer_name": "Test Farmer",
+            "location": "Nashik, Maharashtra",
+            "area": 2.0,
+            "crop_data": {
+                "crop": "Apple",
+                "top_crops": [
+                    {"rank": 1, "crop": "Apple", "probability": 0.50},
+                    {"rank": 2, "crop": "Papaya", "probability": 0.20},
+                    {"rank": 3, "crop": "Orange", "probability": 0.10},
+                ],
+            },
+        }
+        res_b = self.client.post("/api/report/generate", json=payload_no_notes)
+        self.assertEqual(res_b.status_code, 200)
+        text_b = "".join([p.extract_text() for p in PdfReader(io.BytesIO(res_b.data)).pages])
+        self.assertIn("Raw Probability (%)", text_b)
+        self.assertNotIn("Agronomic Notes", text_b)
+
+    def test_harvest_yield_and_msp_crop_lookup_rice_vs_jute(self):
+        """Yield and MSP dynamically change based on top-1 crop lookup:
+        - Rice: 48 Q/ha benchmark (~38.8 Q on 2 acres), ₹2,300 MSP, labeled UNVERIFIED and lookup table.
+        - Jute: 28 Q/ha benchmark (~22.7 Q on 2 acres), 'not verified' MSP (unconfirmed source).
+        """
+        payload_rice = {
+            "farmer_name": "Test Farmer",
+            "location": "Nashik, Maharashtra",
+            "area": 2.0,
+            "area_unit": "Acres",
+            "crop_data": {
+                "crop": "Rice",
+                "top_crops": [{"rank": 1, "crop": "Rice", "probability": 0.70}],
+            },
+        }
+        res_rice = self.client.post("/api/report/generate", json=payload_rice)
+        self.assertEqual(res_rice.status_code, 200)
+        text_rice = "".join([p.extract_text() for p in PdfReader(io.BytesIO(res_rice.data)).pages])
+        self.assertIn("38.8", text_rice)
+        self.assertIn("Quintals", text_rice)
+        self.assertIn("₹2,300 / Quintal", text_rice)
+        self.assertIn("lookup table", text_rice)
+        self.assertIn("UNVERIFIED", text_rice)
+
+        payload_jute = {
+            "farmer_name": "Test Farmer",
+            "location": "Nashik, Maharashtra",
+            "area": 2.0,
+            "area_unit": "Acres",
+            "crop_data": {
+                "crop": "Jute",
+                "top_crops": [{"rank": 1, "crop": "Jute", "probability": 0.70}],
+            },
+        }
+        res_jute = self.client.post("/api/report/generate", json=payload_jute)
+        self.assertEqual(res_jute.status_code, 200)
+        text_jute = "".join([p.extract_text() for p in PdfReader(io.BytesIO(res_jute.data)).pages])
+        self.assertIn("22.7", text_jute)
+        self.assertIn("Quintals", text_jute)
+        self.assertIn("not verified", text_jute)
+        self.assertIn("lookup table", text_jute)
+        self.assertIn("UNVERIFIED", text_jute)
+
+        # Assert yield values are different
+        self.assertNotEqual("38.8", "22.7")
+
+    def test_weather_location_coordinate_mismatch_warning(self):
+        """Location mismatch test:
+        - Haversine distance threshold 50 km.
+        - Coimbatore text + Delhi coords produces location_mismatch: True and advisory warning.
+        - Coordinates absent skips check.
+        """
+        from app.services.weather_service import get_weather_data
+
+        # Coimbatore text + Delhi coordinates (28.6139, 77.2090)
+        w_mismatch = get_weather_data(location="Coimbatore, Tamil Nadu", lat=28.6139, lon=77.2090)
+        self.assertTrue(w_mismatch.get("location_mismatch"))
+        self.assertIn("Location Advisory: Coordinate mismatch detected", w_mismatch.get("location_advisory", ""))
+
+        # No coordinates provided -> check skipped
+        w_nocoord = get_weather_data(location="Coimbatore, Tamil Nadu")
+        self.assertFalse(w_nocoord.get("location_mismatch"))
+
+        # PDF report with mismatch flag shows advisory warning box
+        payload_mismatch = {
+            "farmer_name": "Test Farmer",
+            "location": "Coimbatore, Tamil Nadu",
+            "location_mismatch": True,
+            "location_advisory": w_mismatch.get("location_advisory"),
+        }
+        res_pdf = self.client.post("/api/report/generate", json=payload_mismatch)
+        text_pdf = "".join([p.extract_text() for p in PdfReader(io.BytesIO(res_pdf.data)).pages])
+        self.assertIn("Location Advisory: Coordinate mismatch detected", text_pdf)
+
+    def test_irrigation_formula_rain_effective_rule_label(self):
+        """Irrigation formula includes 'Rain counted fully as effective (no runoff loss)' label."""
+        payload = {
+            "farmer_name": "Test Farmer",
+            "location": "Nashik, Maharashtra",
+            "area": 2.0,
+            "area_unit": "Acres",
+            "irrigation_data": {
+                "forecast_source": "Open-Meteo API (Live Telemetry)",
+                "weekly_schedule": [
+                    {"day": "Today", "date": "2026-10-10", "rainfall_mm": 0.0, "et0_mm": 5.2, "action": "Irrigate", "net_mm": 5.2}
+                ],
+            },
+        }
+        res = self.client.post("/api/report/generate", json=payload)
+        text = "".join([p.extract_text() for p in PdfReader(io.BytesIO(res.data)).pages])
+        self.assertIn("Rain counted fully as effective (no runoff loss)", text)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
