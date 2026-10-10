@@ -165,6 +165,19 @@ def generate_farmer_weather_advisory(temp, humidity, rain_chance, rainfall, wind
     return tips
 
 
+def haversine_distance_km(lat1, lon1, lat2, lon2):
+    """Calculates great-circle distance between two GPS coordinates in kilometers."""
+    r = 6371.0
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = (
+        math.sin(dlat / 2.0) ** 2
+        + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2.0) ** 2
+    )
+    c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
+    return r * c
+
+
 def get_weather_data(location="Pune", lat=None, lon=None):
     """
     Ultra-Fast, High-Performance Meteorological Engine with In-Memory Caching.
@@ -174,9 +187,44 @@ def get_weather_data(location="Pune", lat=None, lon=None):
     clean_city = city_name.split(",")[0].strip()
     city_key = clean_city.lower()
 
-    target_lat = float(lat) if lat is not None and str(lat).strip() != "" else None
-    target_lon = float(lon) if lon is not None and str(lon).strip() != "" else None
+    has_explicit_coords = (lat is not None and str(lat).strip() != "") and (lon is not None and str(lon).strip() != "")
+    target_lat = float(lat) if (lat is not None and str(lat).strip() != "") else None
+    target_lon = float(lon) if (lon is not None and str(lon).strip() != "") else None
     resolved_name = city_name
+
+    location_mismatch = False
+    location_advisory = None
+
+    # Location vs coordinate verification (threshold 50 km)
+    if has_explicit_coords and clean_city:
+        ref_lat, ref_lon = None, None
+        if city_key in GEO_CACHE:
+            ref_lat, ref_lon, _ = GEO_CACHE[city_key]
+        else:
+            try:
+                geo_url = (
+                    f"https://geocoding-api.open-meteo.com/v1/search?name={clean_city}&count=5&language=en&format=json"
+                )
+                g_resp = requests.get(geo_url, timeout=2.5)
+                if g_resp.status_code == 200:
+                    results = g_resp.json().get("results", [])
+                    in_match = next(
+                        (r for r in results if r.get("country_code") == "IN"), results[0] if results else None
+                    )
+                    if in_match:
+                        ref_lat = round(in_match["latitude"], 4)
+                        ref_lon = round(in_match["longitude"], 4)
+            except Exception:
+                pass
+
+        if ref_lat is not None and ref_lon is not None:
+            dist_km = haversine_distance_km(target_lat, target_lon, ref_lat, ref_lon)
+            if dist_km > 50.0:
+                location_mismatch = True
+                location_advisory = (
+                    f"Location Advisory: Coordinate mismatch detected ({dist_km:.1f} km apart). "
+                    f"Provided location text '{city_name}' differs from GPS coordinates ({target_lat:.4f}, {target_lon:.4f})."
+                )
 
     # 1. Coordinate Resolution: Check Instant Cache First
     if target_lat is None or target_lon is None:
@@ -217,6 +265,8 @@ def get_weather_data(location="Pune", lat=None, lon=None):
             # Refresh city name if specific city queried
             result = dict(cached_data)
             result["city"] = resolved_name
+            result["location_mismatch"] = location_mismatch
+            result["location_advisory"] = location_advisory
             return result
 
     # 3. Query High-Resolution Live Meteorological Model (ECMWF / Open-Meteo)
@@ -359,6 +409,8 @@ def get_weather_data(location="Pune", lat=None, lon=None):
                 "forecast_source": "Open-Meteo API (Live Telemetry)",
                 "forecast": forecast,
                 "advisory": generate_farmer_weather_advisory(temp, humidity, rain_chance, rainfall, wind_speed),
+                "location_mismatch": location_mismatch,
+                "location_advisory": location_advisory,
             }
 
             # Cache the result
@@ -420,6 +472,8 @@ def get_weather_data(location="Pune", lat=None, lon=None):
                     "forecast_source": "Fallback (OpenWeatherMap / Estimated)",
                     "forecast": fallback_forecast,
                     "advisory": generate_farmer_weather_advisory(temp, humidity, 10, rain_mm, wind),
+                    "location_mismatch": location_mismatch,
+                    "location_advisory": location_advisory,
                 }
                 WEATHER_CACHE[cache_key] = (now, owm_res)
                 return owm_res
@@ -462,4 +516,6 @@ def get_weather_data(location="Pune", lat=None, lon=None):
         "forecast_source": "Fallback (Agro-climatic Regional Baseline)",
         "forecast": baseline_forecast,
         "advisory": ["🌱 Regular Farm Operations: Good conditions for normal field work."],
+        "location_mismatch": location_mismatch,
+        "location_advisory": location_advisory,
     }
