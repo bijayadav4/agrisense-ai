@@ -469,7 +469,7 @@ def get_weather_data(location="Pune", lat=None, lon=None):
                     "wind_speed": wind,
                     "condition": condition,
                     "icon": "⛅",
-                    "forecast_source": "Fallback (OpenWeatherMap / Estimated)",
+                    "forecast_source": "Fallback (Agro-climatic Regional Baseline)",
                     "forecast": fallback_forecast,
                     "advisory": generate_farmer_weather_advisory(temp, humidity, 10, rain_mm, wind),
                     "location_mismatch": location_mismatch,

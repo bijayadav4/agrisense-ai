@@ -78,6 +78,7 @@ export default function DashboardView({
           mop_bags: 0.34
         },
         irrigation_data: {
+          forecast_source: weatherData?.forecast_source || "Unknown",
           et0_method: "open-meteo-fao56",
           interval_days: 4,
           daily_liters: 47512,

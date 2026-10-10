@@ -1,5 +1,6 @@
 import io
 import unittest
+from unittest import mock
 from pypdf import PdfReader
 from app import create_app
 
@@ -612,6 +613,44 @@ class SoilFlowAuditTestCase(unittest.TestCase):
         res = self.client.post("/api/report/generate", json=payload)
         text = "".join([p.extract_text() for p in PdfReader(io.BytesIO(res.data)).pages])
         self.assertIn("Rain counted fully as effective (no runoff loss)", text)
+
+    @mock.patch("app.services.weather_service.requests.get")
+    def test_weather_api_429_mock_produces_fallback_in_pdf(self, mock_get):
+        """When weather API returns 429 (rate-limited / error):
+        - weather_service returns forecast_source: 'Fallback (Agro-climatic Regional Baseline)'
+        - PDF report renders 'Fallback (Agro-climatic Regional Baseline)'
+        - PDF report does NOT render 'Live Telemetry'
+        - PDF report renders 'Forecast Advisory: Forecast unavailable' warning
+        """
+        # Mock requests.get to return 429
+        mock_resp = mock.MagicMock()
+        mock_resp.status_code = 429
+        mock_get.return_value = mock_resp
+
+        # Clear weather cache so mock takes effect
+        from app.services.weather_service import WEATHER_CACHE, get_weather_data
+        WEATHER_CACHE.clear()
+
+        w_data = get_weather_data("Coimbatore")
+        self.assertEqual(w_data.get("forecast_source"), "Fallback (Agro-climatic Regional Baseline)")
+
+        # Generate PDF with this weather data
+        payload = {
+            "farmer_name": "Test Farmer",
+            "location": "Coimbatore, Tamil Nadu",
+            "weather_data": w_data,
+            "irrigation_data": {
+                "forecast_source": w_data.get("forecast_source"),
+                "weekly_schedule": w_data.get("forecast", []),
+            },
+        }
+        res = self.client.post("/api/report/generate", json=payload)
+        self.assertEqual(res.status_code, 200)
+        text = "".join([p.extract_text() for p in PdfReader(io.BytesIO(res.data)).pages])
+        self.assertIn("Fallback", text)
+        self.assertIn("Agro-climatic Regional Baseline", text)
+        self.assertNotIn("Live Telemetry", text)
+        self.assertIn("Forecast Advisory: Forecast unavailable", text)
 
 
 if __name__ == "__main__":

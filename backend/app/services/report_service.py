@@ -619,8 +619,12 @@ def generate_farmer_report_card(data):
     irr_suffix = " — <font color='#b45309'><b>[Estimated, not for actual application]</b></font>" if is_estimated else ""
     story.append(Paragraph(f"3. Irrigation Schedule (FAO-56 Water Balance){irr_suffix}", h2_style))
     irr_data = data.get("irrigation_data", {})
-    et0_method = irr_data.get("et0_method", "open-meteo-fao56")
-    forecast_source = str(irr_data.get("forecast_source") or data.get("forecast_source") or "Open-Meteo API (Live Telemetry)").strip()
+    raw_fc_source = (
+        irr_data.get("forecast_source")
+        or data.get("forecast_source")
+        or data.get("weather_data", {}).get("forecast_source")
+    )
+    forecast_source = str(raw_fc_source).strip() if raw_fc_source else "Unknown"
 
     incoming_schedule = irr_data.get("weekly_schedule") or irr_data.get("forecast") or []
 
