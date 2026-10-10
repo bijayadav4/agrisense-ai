@@ -21,6 +21,9 @@ export default function DashboardView({
   locationName = 'Coimbatore, Tamil Nadu',
   weatherData, 
   recommendation, 
+  farmArea = 2.0,
+  farmAreaUnit = 'Acres',
+  harvestInfo,
   onNavigateTab 
 }) {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -29,13 +32,27 @@ export default function DashboardView({
     try {
       setIsGeneratingPdf(true);
       const isDemo = !recommendation;
+
+      // Extract real forecast without hardcoded fallback days or ad-hoc 0.75 multiplier
+      const forecastDays = (weatherData?.forecast && Array.isArray(weatherData.forecast) && weatherData.forecast.length > 0)
+        ? weatherData.forecast.slice(0, 7)
+        : [];
+
+      const weeklySchedule = forecastDays.map((f, idx) => ({
+        day: f.day || (idx === 0 ? "Today" : `Day ${idx + 1}`),
+        date: f.date || "",
+        temp_max: Math.round(f.temp_max || f.max_temp || 30),
+        rainfall_mm: Number(f.rain_mm || f.rainfall_mm || 0),
+        et0_mm: Number(f.et0 || f.et0_mm || 5.0)
+      }));
+
       const payload = {
-        farmer_name: isDemo ? "Farmer (Demo Preview)" : "Farmer",
-        location: locationName,
-        area: 2.0,
-        area_unit: "Acres",
-        soil_type: recommendation?.soil_type || "Loamy",
-        soil_source: recommendation?.soil_source || (isDemo ? "Demo data" : "User-Selected"),
+        farmer_name: recommendation?.farmer_name || "Not provided",
+        location: locationName || "Coimbatore, Tamil Nadu",
+        area: parseFloat(farmArea) || 1.0,
+        area_unit: farmAreaUnit || "Acres",
+        soil_type: recommendation?.soil_type || null,
+        soil_source: recommendation?.soil_source || null,
         data_source: recommendation?.data_source || (isDemo ? "Demo estimated" : "User entered"),
         is_estimated: isDemo || Boolean(recommendation?.is_estimated),
         N: recommendation?.N !== undefined ? recommendation.N : "85",
@@ -43,11 +60,9 @@ export default function DashboardView({
         K: recommendation?.K !== undefined ? recommendation.K : "40",
         ph: recommendation?.ph !== undefined ? recommendation.ph : "6.4",
         crop_data: {
-          crop: recommendation?.crop || "Rice (Demo)",
-          confidence: recommendation?.confidence || 92.5,
-          top_crops: recommendation?.top_crops || [
-            { rank: 1, crop: recommendation?.crop || "rice", probability: (recommendation?.confidence || 92.5) / 100, confidence: recommendation?.confidence || 92.5 }
-          ],
+          crop: recommendation?.crop || null,
+          confidence: recommendation?.confidence || null,
+          top_crops: recommendation?.top_crops || [],
           is_ambiguous: recommendation?.is_ambiguous || false,
           ambiguity_warning: recommendation?.ambiguity_warning || null,
           season_warning: recommendation?.season_warning || null,
@@ -67,18 +82,15 @@ export default function DashboardView({
           interval_days: 4,
           daily_liters: 47512,
           drip_runtime_hours: 0.6,
-          weekly_schedule: [
-            { day: "Day 1", temp_max: Math.round(weatherData?.temperature || 28), rainfall_mm: Math.round(weatherData?.rainfall || 0), et0_mm: 5.2, net_mm: 5.0, action: "Irrigate (Drip 0.6h)" },
-            { day: "Day 2", temp_max: Math.round((weatherData?.temperature || 28) + 1), rainfall_mm: 0, et0_mm: 5.4, net_mm: 5.4, action: "Moisture Adequate" }
-          ]
+          weekly_schedule: weeklySchedule
         },
         harvest_data: {
-          harvest_date: "Indicative Calendar Projection",
-          days_remaining: 70,
-          yield_quintals: 38.9,
-          msp_year: "2024-25",
-          msp_rs_per_quintal: 2300,
-          msp_type: "UNVERIFIED (Pending Official Gazette)"
+          harvest_date: harvestInfo?.harvest_date_formatted || harvestInfo?.expected_harvest_date || "Indicative Calendar Projection",
+          days_remaining: harvestInfo?.days_remaining !== undefined ? harvestInfo.days_remaining : 70,
+          yield_quintals: harvestInfo?.yield_prediction?.total_expected_quintals || 38.9,
+          msp_year: harvestInfo?.msp_info?.year || "2024-25",
+          msp_rs_per_quintal: harvestInfo?.msp_info?.rate_rs_per_quintal || 2300,
+          msp_type: harvestInfo?.msp_info?.verification_status || "UNVERIFIED (Pending Official Gazette)"
         }
       };
 
@@ -280,7 +292,7 @@ export default function DashboardView({
             <p style={{ fontSize: '0.84rem', color: '#475569', lineHeight: 1.5, margin: '0 0 14px 0' }}>
               {recommendation 
                 ? 'Scientifically recommended for your soil nutrient profile (N-P-K & pH) and local climate.'
-                : '⚠️ Demo data preview. Kripya Crop tab me jakar apne Soil Health Card ke N-P-K-pH values daalein.'}
+                : '⚠️ Demo data preview. Please go to the Crop tab and enter your Soil Health Card N, P, K and pH values.'}
             </p>
 
             <div style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '16px' }}>

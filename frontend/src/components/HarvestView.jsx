@@ -55,7 +55,15 @@ const LAND_UNITS = [
   { value: 'hectares', label: 'Hectares' }
 ];
 
-export default function HarvestView({ initialCrop = 'rice' }) {
+export default function HarvestView({ 
+  initialCrop = 'rice',
+  farmArea = 2,
+  farmAreaUnit = 'acres',
+  harvestInfo,
+  onUpdateHarvestInfo,
+  onUpdateFarmArea,
+  onUpdateFarmAreaUnit
+}) {
   // Default sowing date: 45 days ago for realistic active progression
   const defaultSowingDate = () => {
     const d = new Date();
@@ -65,16 +73,30 @@ export default function HarvestView({ initialCrop = 'rice' }) {
 
   const [crop, setCrop] = useState(initialCrop || 'rice');
   const [sowingDate, setSowingDate] = useState(defaultSowingDate());
-  const [area, setArea] = useState(2);
-  const [areaUnit, setAreaUnit] = useState('acres');
+  const [area, setArea] = useState(farmArea);
+  const [areaUnit, setAreaUnit] = useState(farmAreaUnit);
   const [varietyDurationDays, setVarietyDurationDays] = useState('');
 
   const [loading, setLoading] = useState(false);
-  const [harvestResult, setHarvestResult] = useState(null);
+  const [harvestResult, setHarvestResult] = useState(harvestInfo);
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
-    handlePredictHarvest();
+    if (farmArea) setArea(farmArea);
+  }, [farmArea]);
+
+  useEffect(() => {
+    if (farmAreaUnit) setAreaUnit(farmAreaUnit);
+  }, [farmAreaUnit]);
+
+  useEffect(() => {
+    if (harvestInfo) setHarvestResult(harvestInfo);
+  }, [harvestInfo]);
+
+  useEffect(() => {
+    if (!harvestInfo) {
+      handlePredictHarvest();
+    }
   }, []);
 
   const handlePredictHarvest = async (e) => {
@@ -97,6 +119,7 @@ export default function HarvestView({ initialCrop = 'rice' }) {
       const res = await getHarvestPrediction(payload);
       if (res && res.success) {
         setHarvestResult(res);
+        if (onUpdateHarvestInfo) onUpdateHarvestInfo(res);
       } else {
         setErrorMsg(res?.error || 'Failed to predict harvest timeline');
       }
@@ -137,11 +160,13 @@ export default function HarvestView({ initialCrop = 'rice' }) {
       </div>
 
       {/* 2. Main 2-Column Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 390px) 1fr', gap: '24px', alignItems: 'start' }}>
+      <div className="responsive-two-col" style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 400px) minmax(0, 1fr)', gap: '24px', alignItems: 'start' }}>
         
         {/* Left Form: Sowing Date & Land */}
         <div 
           style={{
+            minWidth: 0,
+            boxSizing: 'border-box',
             background: 'var(--bg-card)',
             border: '1px solid var(--border-color)',
             borderRadius: 'var(--radius-xl)',
@@ -166,6 +191,8 @@ export default function HarvestView({ initialCrop = 'rice' }) {
                 onChange={(e) => setCrop(e.target.value)}
                 style={{
                   width: '100%',
+                  minWidth: 0,
+                  boxSizing: 'border-box',
                   padding: '10px 14px',
                   borderRadius: 'var(--radius-md)',
                   border: '1px solid var(--border-color)',
@@ -191,6 +218,8 @@ export default function HarvestView({ initialCrop = 'rice' }) {
                 onChange={(e) => setSowingDate(e.target.value)}
                 style={{
                   width: '100%',
+                  minWidth: 0,
+                  boxSizing: 'border-box',
                   padding: '10px 14px',
                   borderRadius: 'var(--radius-md)',
                   border: '1px solid var(--border-color)',
@@ -210,15 +239,21 @@ export default function HarvestView({ initialCrop = 'rice' }) {
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '6px' }}>
                 Cultivated Farm Land Area
               </label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '0.75rem' }}>
                 <input
                   type="number"
                   step="0.1"
                   min="0.1"
                   value={area}
-                  onChange={(e) => setArea(e.target.value)}
+                  onChange={(e) => {
+                    setArea(e.target.value);
+                    if (onUpdateFarmArea) onUpdateFarmArea(e.target.value);
+                  }}
                   placeholder="2"
                   style={{
+                    width: '100%',
+                    minWidth: 0,
+                    boxSizing: 'border-box',
                     padding: '10px 14px',
                     borderRadius: 'var(--radius-md)',
                     border: '1px solid var(--border-color)',
@@ -228,13 +263,23 @@ export default function HarvestView({ initialCrop = 'rice' }) {
                 />
                 <select
                   value={areaUnit}
-                  onChange={(e) => setAreaUnit(e.target.value)}
+                  onChange={(e) => {
+                    setAreaUnit(e.target.value);
+                    if (onUpdateFarmAreaUnit) onUpdateFarmAreaUnit(e.target.value);
+                  }}
                   style={{
+                    width: '100%',
+                    maxWidth: '100%',
+                    minWidth: 0,
+                    boxSizing: 'border-box',
+                    overflow: 'hidden',
                     padding: '10px 12px',
                     borderRadius: 'var(--radius-md)',
                     border: '1px solid var(--border-color)',
                     background: 'var(--bg-card)',
-                    fontSize: '13px'
+                    fontSize: '13px',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
                   }}
                 >
                   {LAND_UNITS.map((u) => (
@@ -258,6 +303,8 @@ export default function HarvestView({ initialCrop = 'rice' }) {
                 placeholder="e.g. 110 (Default: Crop average)"
                 style={{
                   width: '100%',
+                  minWidth: 0,
+                  boxSizing: 'border-box',
                   padding: '10px 14px',
                   borderRadius: 'var(--radius-md)',
                   border: '1px solid var(--border-color)',
@@ -309,7 +356,7 @@ export default function HarvestView({ initialCrop = 'rice' }) {
         </div>
 
         {/* Right Content: Timeline & Yield Cards */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', minWidth: 0 }}>
           {harvestResult ? (
             <>
               {/* Status Banner (Upcoming / Overdue / Active) */}
@@ -437,7 +484,7 @@ export default function HarvestView({ initialCrop = 'rice' }) {
               </div>
 
               {/* Yield Range & Financial Cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
                 {/* 1. Total Quintals with Range */}
                 <div 
                   style={{
@@ -539,194 +586,6 @@ export default function HarvestView({ initialCrop = 'rice' }) {
                   </span>
                 </div>
               </div>
-
-              {/* Yield Card Disclaimer & Source */}
-              <div 
-                style={{
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: 'var(--radius-lg)',
-                  padding: '12px 18px',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  justifyContent: 'space-between',
-                  gap: '12px',
-                  flexWrap: 'wrap',
-                  fontSize: '12px',
-                  color: 'var(--text-muted)'
-                }}
-              >
-                <div>
-                  ⚠️ <strong>Disclaimer:</strong> {harvestResult.yield_prediction.disclaimer || "Indicative estimate. Actual yield depends on variety, weather, pests and management."}
-                </div>
-                <div>
-                  📚 <strong>Benchmark:</strong> {harvestResult.yield_prediction.baseline_yield_source || "ICAR Research Benchmark"}
-                </div>
-              </div>
-
-              {/* 5 Phenological Stages Timeline Stepper */}
-              <div 
-                style={{
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: 'var(--radius-xl)',
-                  padding: '24px',
-                  boxShadow: 'var(--shadow-card)'
-                }}
-              >
-                <div style={{ marginBottom: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                  <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Layers size={18} color="var(--primary-green)" /> 5 Phenological Growth Stages & Field Agronomy
-                  </h3>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {harvestResult.stage_source === 'generic' ? (
-                      <span 
-                        style={{
-                          fontSize: '11px',
-                          fontWeight: 700,
-                          padding: '3px 10px',
-                          borderRadius: '12px',
-                          background: '#fef3c7',
-                          color: '#92400e',
-                          border: '1px solid #fde68a'
-                        }}
-                      >
-                        Approximate (Generic Phenology)
-                      </span>
-                    ) : (
-                      <span 
-                        style={{
-                          fontSize: '11px',
-                          fontWeight: 700,
-                          padding: '3px 10px',
-                          borderRadius: '12px',
-                          background: '#dcfce7',
-                          color: '#166534',
-                          border: '1px solid #bbf7d0'
-                        }}
-                      >
-                        Crop-Specific Benchmark
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {harvestResult.stages_timeline?.map((st, idx) => {
-                    const isCompleted = st.status === 'Completed';
-                    const isActive = st.status === 'Active';
-                    const isUpcoming = st.status === 'Upcoming';
-
-                    let circleBg = 'var(--border-color)';
-                    let circleColor = 'var(--text-muted)';
-                    let cardBg = 'transparent';
-                    let cardBorder = 'var(--border-subtle)';
-
-                    if (isCompleted) {
-                      circleBg = 'var(--primary-green)';
-                      circleColor = '#ffffff';
-                      cardBg = 'var(--bg-card-subtle)';
-                    } else if (isActive) {
-                      circleBg = '#0284c7';
-                      circleColor = '#ffffff';
-                      cardBg = 'var(--primary-green-light)';
-                      cardBorder = 'var(--primary-green-border)';
-                    } else {
-                      circleBg = '#cbd5e1';
-                      circleColor = '#64748b';
-                    }
-
-                    return (
-                      <div 
-                        key={st.stage}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          gap: '14px',
-                          padding: '14px 16px',
-                          borderRadius: 'var(--radius-md)',
-                          background: cardBg,
-                          border: `1px solid ${cardBorder}`,
-                          position: 'relative'
-                        }}
-                      >
-                        {/* Step indicator circle */}
-                        <div 
-                          style={{
-                            width: '28px',
-                            height: '28px',
-                            borderRadius: '50%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 700,
-                            fontSize: '12px',
-                            background: circleBg,
-                            color: circleColor,
-                            flexShrink: 0,
-                            marginTop: '2px'
-                          }}
-                        >
-                          {isCompleted ? <CheckCircle2 size={16} /> : (idx + 1)}
-                        </div>
-
-                        {/* Content */}
-                        <div style={{ flex: 1 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-heading)' }}>
-                              {st.stage}
-                            </span>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                                {st.day_range}
-                              </span>
-                              <span 
-                                style={{
-                                  fontSize: '11px',
-                                  fontWeight: 700,
-                                  padding: '2px 8px',
-                                  borderRadius: '12px',
-                                  background: isCompleted ? '#dcfce7' : (isActive ? '#e0f2fe' : '#f1f5f9'),
-                                  color: isCompleted ? '#166534' : (isActive ? '#0369a1' : '#64748b')
-                                }}
-                              >
-                                {st.status}
-                              </span>
-                            </div>
-                          </div>
-                          <div style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginTop: '4px', lineHeight: 1.4 }}>
-                            💡 {st.tip}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Harvest Readiness Checklist */}
-              <div 
-                style={{
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: 'var(--radius-xl)',
-                  padding: '20px 24px',
-                  boxShadow: 'var(--shadow-card)'
-                }}
-              >
-                <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-heading)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <ShieldCheck size={18} color="var(--primary-green)" /> Field Readiness Protocol Before Harvesting
-                </h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
-                  {harvestResult.harvest_readiness_checklist?.map((item, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '13px', color: 'var(--text-main)', lineHeight: 1.4 }}>
-                      <CheckCircle2 size={16} color="var(--primary-green)" style={{ flexShrink: 0, marginTop: '2px' }} />
-                      <span>{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
             </>
           ) : (
             <div 
@@ -751,6 +610,198 @@ export default function HarvestView({ initialCrop = 'rice' }) {
         </div>
 
       </div>
+
+      {/* 3. Full-Width Timeline & Agronomy (Entire Page Fitting on Scroll) */}
+      {harvestResult && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '24px', width: '100%' }}>
+          {/* Yield Card Disclaimer & Source */}
+          <div 
+            style={{
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: 'var(--radius-lg)',
+              padding: '12px 18px',
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: '12px',
+              flexWrap: 'wrap',
+              fontSize: '12px',
+              color: 'var(--text-muted)'
+            }}
+          >
+            <div>
+              ⚠️ <strong>Disclaimer:</strong> {harvestResult.yield_prediction.disclaimer || "Indicative estimate. Actual yield depends on variety, weather, pests and management."}
+            </div>
+            <div>
+              📚 <strong>Benchmark:</strong> {harvestResult.yield_prediction.baseline_yield_source || "ICAR Research Benchmark"}
+            </div>
+          </div>
+
+          {/* 5 Phenological Stages Timeline Stepper */}
+          <div 
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--radius-xl)',
+              padding: '24px',
+              boxShadow: 'var(--shadow-card)'
+            }}
+          >
+            <div style={{ marginBottom: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Layers size={18} color="var(--primary-green)" /> 5 Phenological Growth Stages & Field Agronomy
+              </h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {harvestResult.stage_source === 'generic' ? (
+                  <span 
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      padding: '3px 10px',
+                      borderRadius: '12px',
+                      background: '#fef3c7',
+                      color: '#92400e',
+                      border: '1px solid #fde68a'
+                    }}
+                  >
+                    Approximate (Generic Phenology)
+                  </span>
+                ) : (
+                  <span 
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      padding: '3px 10px',
+                      borderRadius: '12px',
+                      background: '#dcfce7',
+                      color: '#166534',
+                      border: '1px solid #bbf7d0'
+                    }}
+                  >
+                    Crop-Specific Benchmark
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {harvestResult.stages_timeline?.map((st, idx) => {
+                const isCompleted = st.status === 'Completed';
+                const isActive = st.status === 'Active';
+                const isUpcoming = st.status === 'Upcoming';
+
+                let circleBg = 'var(--border-color)';
+                let circleColor = 'var(--text-muted)';
+                let cardBg = 'transparent';
+                let cardBorder = 'var(--border-subtle)';
+
+                if (isCompleted) {
+                  circleBg = 'var(--primary-green)';
+                  circleColor = '#ffffff';
+                  cardBg = 'var(--bg-card-subtle)';
+                } else if (isActive) {
+                  circleBg = '#0284c7';
+                  circleColor = '#ffffff';
+                  cardBg = 'var(--primary-green-light)';
+                  cardBorder = 'var(--primary-green-border)';
+                } else {
+                  circleBg = '#cbd5e1';
+                  circleColor = '#64748b';
+                }
+
+                return (
+                  <div 
+                    key={st.stage}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '14px',
+                      padding: '14px 16px',
+                      borderRadius: 'var(--radius-md)',
+                      background: cardBg,
+                      border: `1px solid ${cardBorder}`,
+                      position: 'relative'
+                    }}
+                  >
+                    {/* Step indicator circle */}
+                    <div 
+                      style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 700,
+                        fontSize: '12px',
+                        background: circleBg,
+                        color: circleColor,
+                        flexShrink: 0,
+                        marginTop: '2px'
+                      }}
+                    >
+                      {isCompleted ? <CheckCircle2 size={16} /> : (idx + 1)}
+                    </div>
+
+                    {/* Content */}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-heading)' }}>
+                          {st.stage}
+                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                            {st.day_range}
+                          </span>
+                          <span 
+                            style={{
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              padding: '2px 8px',
+                              borderRadius: '12px',
+                              background: isCompleted ? '#dcfce7' : (isActive ? '#e0f2fe' : '#f1f5f9'),
+                              color: isCompleted ? '#166534' : (isActive ? '#0369a1' : '#64748b')
+                            }}
+                          >
+                            {st.status}
+                          </span>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginTop: '4px', lineHeight: 1.4 }}>
+                        💡 {st.tip}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Harvest Readiness Checklist */}
+          <div 
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--radius-xl)',
+              padding: '20px 24px',
+              boxShadow: 'var(--shadow-card)'
+            }}
+          >
+            <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-heading)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ShieldCheck size={18} color="var(--primary-green)" /> Field Readiness Protocol Before Harvesting
+            </h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+              {harvestResult.harvest_readiness_checklist?.map((item, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '13px', color: 'var(--text-main)', lineHeight: 1.4 }}>
+                  <CheckCircle2 size={16} color="var(--primary-green)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -202,7 +202,7 @@
   font-weight: 600;
 }
 
-/* Header Kisan Helpline Badge */
+/* Header Farmer Helpline Badge */
 .header-helpline-section {
   display: flex;
   align-items: center;
@@ -1253,3 +1253,29 @@
     align-items: flex-start;
   }
 }
+
+/* Responsive Two-Column Layout (Irrigation & Harvest Views) */
+.responsive-two-col {
+  display: grid;
+  grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.responsive-two-col > * {
+  min-width: 0;
+}
+
+.responsive-two-col input,
+.responsive-two-col select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1280px) {
+  .responsive-two-col {
+    grid-template-columns: 1fr !important;
+  }
+}
+

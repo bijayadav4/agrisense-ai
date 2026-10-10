@@ -8,7 +8,7 @@ import IrrigationView from './components/IrrigationView';
 import HarvestView from './components/HarvestView';
 import WeatherView from './components/WeatherView';
 import LocationModal from './components/LocationModal';
-import { getWeatherData, checkHealth } from './services/api';
+import { getWeatherData, checkHealth, getHarvestPrediction, recommendCrop } from './services/api';
 import './App.css';
 
 
@@ -16,35 +16,56 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [locationName, setLocationName] = useState('Coimbatore, Tamil Nadu');
   const [weatherData, setWeatherData] = useState(null);
-  const [recommendation, setRecommendation] = useState({
-    crop: 'rice',
-    confidence: 99.55,
-    profile: {
-      season: 'Kharif (Monsoon)',
-      duration: '105 – 150 Days',
-      water_need: 'High (Flooded / Submerged)',
-      ideal_ph: '5.5 – 6.8',
-      harvest_tips: 'Harvest when 80-85% of the panicles turn golden yellow.'
-    }
-  });
+  const [farmArea, setFarmArea] = useState(2.0);
+  const [farmAreaUnit, setFarmAreaUnit] = useState('Acres');
+  const [harvestInfo, setHarvestInfo] = useState(null);
+  const [recommendation, setRecommendation] = useState(null);
 
   const [serverStatus, setServerStatus] = useState('checking');
   const [detectingGPS, setDetectingGPS] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+
+  // Sync harvest predictions with active crop and farm area
+  useEffect(() => {
+    let isMounted = true;
+    const fetchHarvest = async () => {
+      try {
+        const cropName = (recommendation?.crop || 'rice').toLowerCase();
+        const todayStr = new Date().toISOString().split('T')[0];
+        const res = await getHarvestPrediction({
+          crop: cropName,
+          sowing_date: todayStr,
+          area: parseFloat(farmArea) || 1.0,
+          area_unit: farmAreaUnit
+        });
+        if (isMounted && res && res.success) {
+          setHarvestInfo(res);
+        }
+      } catch (err) {
+        console.error('Harvest fetch notice:', err);
+      }
+    };
+    fetchHarvest();
+    return () => { isMounted = false; };
+  }, [recommendation?.crop, farmArea, farmAreaUnit]);
 
   // Initial load: health check & default weather (parallelized for 0s load)
   useEffect(() => {
     let isMounted = true;
     const initApp = async () => {
       try {
-        const [health, weather] = await Promise.all([
+        const [health, weather, cropRes] = await Promise.all([
           checkHealth(),
-          getWeatherData('Coimbatore')
+          getWeatherData('Coimbatore'),
+          recommendCrop({ N: 85, P: 48, K: 40, ph: 6.4, location: 'Coimbatore', data_source: 'Demo estimated' }).catch(() => null)
         ]);
         if (!isMounted) return;
         setServerStatus(health.status === 'online' ? 'online' : 'offline');
         if (weather && weather.success) {
           setWeatherData(weather.data);
+        }
+        if (cropRes && cropRes.success) {
+          setRecommendation(cropRes);
         }
       } catch (err) {
         if (!isMounted) return;
@@ -56,17 +77,41 @@ export default function App() {
     return () => { isMounted = false; };
   }, []);
 
+  // Re-fetch weather whenever locationName changes
+  useEffect(() => {
+    if (!locationName) return;
+    let isMounted = true;
+    const updateWeather = async () => {
+      try {
+        const res = await getWeatherData(locationName);
+        if (isMounted && res && res.success) {
+          setWeatherData(res.data);
+        }
+      } catch (err) {
+        console.error('Weather re-fetch error:', err);
+      }
+    };
+    updateWeather();
+    return () => { isMounted = false; };
+  }, [locationName]);
+
+  const [soilData, setSoilData] = useState({
+    soil_type: 'Loamy',
+    confidence: null,
+    source: 'user-selected'
+  });
+
+  const handleUpdateSoil = (soilType, confidence = null, source = 'user-selected') => {
+    setSoilData({
+      soil_type: soilType,
+      confidence: confidence,
+      source: source
+    });
+  };
+
   // Handle Location Switch
   const handleLocationSelect = async (loc) => {
     setLocationName(loc);
-    try {
-      const weather = await getWeatherData(loc);
-      if (weather.success) {
-        setWeatherData(weather.data);
-      }
-    } catch (err) {
-      console.error('Weather fetch error:', err);
-    }
   };
 
   // GPS Auto-detect handler
@@ -126,6 +171,9 @@ export default function App() {
               locationName={locationName}
               weatherData={weatherData}
               recommendation={recommendation}
+              farmArea={farmArea}
+              farmAreaUnit={farmAreaUnit}
+              harvestInfo={harvestInfo}
               onNavigateTab={setActiveTab}
             />
           )}
@@ -133,6 +181,9 @@ export default function App() {
           {activeTab === 'crop' && (
             <CropView
               activeLocation={locationName}
+              weatherData={weatherData}
+              soilData={soilData}
+              onUpdateSoil={handleUpdateSoil}
               onCropAnalyzed={(data) => {
                 setRecommendation(data);
               }}
@@ -142,6 +193,8 @@ export default function App() {
           {activeTab === 'fertilizer' && (
             <FertilizerView
               initialCrop={recommendation?.crop}
+              soilData={soilData}
+              onUpdateSoil={handleUpdateSoil}
             />
           )}
 
@@ -149,12 +202,24 @@ export default function App() {
             <IrrigationView
               activeLocation={locationName}
               initialCrop={recommendation?.crop}
+              soilData={soilData}
+              farmArea={farmArea}
+              farmAreaUnit={farmAreaUnit}
+              onUpdateFarmArea={setFarmArea}
+              onUpdateFarmAreaUnit={setFarmAreaUnit}
+              onUpdateSoil={handleUpdateSoil}
             />
           )}
 
           {activeTab === 'harvest' && (
             <HarvestView
               initialCrop={recommendation?.crop}
+              farmArea={farmArea}
+              farmAreaUnit={farmAreaUnit}
+              harvestInfo={harvestInfo}
+              onUpdateHarvestInfo={setHarvestInfo}
+              onUpdateFarmArea={setFarmArea}
+              onUpdateFarmAreaUnit={setFarmAreaUnit}
             />
           )}
 

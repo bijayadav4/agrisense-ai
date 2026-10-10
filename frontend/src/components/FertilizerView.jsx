@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FlaskConical, 
   Sparkles, 
@@ -38,12 +38,12 @@ const FERT_PRESETS = [
   { name: '⚖️ Partial Deficit Soil (N:210, P:14, K:310 kg/ha)', crop: 'Paddy', soil: 'Clayey', n: 210, p: 14, k: 310, moist: 70 },
 ];
 
-export default function FertilizerView({ initialCrop }) {
+export default function FertilizerView({ initialCrop, soilData, onUpdateSoil }) {
   const [formData, setFormData] = useState({
     temperature: 26,
     humidity: 60,
     moisture: 40,
-    soil_type: 'Clayey',
+    soil_type: soilData?.soil_type || 'Clayey',
     crop_type: initialCrop && CROP_TYPES.includes(initialCrop.charAt(0).toUpperCase() + initialCrop.slice(1)) 
       ? initialCrop.charAt(0).toUpperCase() + initialCrop.slice(1) 
       : 'Paddy',
@@ -59,9 +59,20 @@ export default function FertilizerView({ initialCrop }) {
   const [error, setError] = useState('');
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
   const [soilDetecting, setSoilDetecting] = useState(false);
-  const [soilDetectionResult, setSoilDetectionResult] = useState(null);
+  const [soilDetectionResult, setSoilDetectionResult] = useState(soilData?.confidence ? { soil_type: soilData.soil_type, confidence: soilData.confidence } : null);
   const [soilDetectionError, setSoilDetectionError] = useState('');
-  const [soilSource, setSoilSource] = useState('user-selected');
+  const [soilSource, setSoilSource] = useState(soilData?.source || 'user-selected');
+
+  // Sync with global soil state from App.jsx
+  useEffect(() => {
+    if (soilData?.soil_type) {
+      setFormData(prev => ({ ...prev, soil_type: soilData.soil_type }));
+      setSoilSource(soilData.source || 'user-selected');
+      if (soilData.confidence) {
+        setSoilDetectionResult({ soil_type: soilData.soil_type, confidence: soilData.confidence });
+      }
+    }
+  }, [soilData]);
 
   const handleSoilImageUpload = async (e) => {
     const file = e.target.files && e.target.files[0];
@@ -79,6 +90,9 @@ export default function FertilizerView({ initialCrop }) {
           ...prev,
           soil_type: res.soil_type
         }));
+        if (onUpdateSoil) {
+          onUpdateSoil(res.soil_type, res.confidence, 'ai-detected');
+        }
       } else {
         setSoilDetectionError(res.error || 'Failed to classify soil image');
       }
@@ -93,6 +107,9 @@ export default function FertilizerView({ initialCrop }) {
   const handleSoilOverrideChange = (newType) => {
     setFormData(prev => ({ ...prev, soil_type: newType }));
     setSoilSource('user-selected');
+    if (onUpdateSoil) {
+      onUpdateSoil(newType, null, 'user-selected');
+    }
   };
 
   const handlePresetSelect = (preset) => {
@@ -106,6 +123,9 @@ export default function FertilizerView({ initialCrop }) {
       moisture: Number(preset.moist)
     }));
     setDataSource('Demo estimated');
+    if (onUpdateSoil) {
+      onUpdateSoil(preset.soil, null, 'user-selected');
+    }
   };
 
   const handleChange = (e) => {
@@ -345,19 +365,19 @@ export default function FertilizerView({ initialCrop }) {
                     {(soilDetectionResult.confidence < 70 || soilDetectionResult.soil_type?.toLowerCase() === 'loamy') && (
                       <span style={{ background: '#fef3c7', border: '1px solid #fde68a', color: '#92400e', padding: '2px 8px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                         {soilDetectionResult.soil_type?.toLowerCase() === 'loamy'
-                          ? '⚠️ Is class ki detection kamzor hai (Loamy precision ~38.5%), soil type manually confirm karein'
-                          : '⚠️ Is class ki detection kamzor hai, soil type manually confirm karein'}
+                          ? '⚠️ Detection for this soil type is weak (Loamy precision ~38.5%). Please confirm the soil type yourself'
+                          : '⚠️ Detection for this soil type is weak. Please confirm the soil type yourself'}
                       </span>
                     )}
                   </div>
                   <span style={{ fontSize: '0.74rem', color: '#475569', display: 'block', marginTop: '2px' }}>
-                    Photo se NPK ya moisture nahi nikalte; kripya Soil Health Card ya lab test ke values neeche daalein.
+                    A photo cannot give N, P, K or moisture. Please enter values from your Soil Health Card or lab test below.
                   </span>
 
-                  {/* Soil type badlein manual override */}
+                  {/* Change soil type manual override */}
                   <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px dashed #cbd5e1', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155' }}>
-                      🔄 Soil type badlein:
+                      🔄 Change soil type:
                     </label>
                     <select
                       value={formData.soil_type}
@@ -501,7 +521,7 @@ export default function FertilizerView({ initialCrop }) {
             </div>
 
             <p style={{ fontSize: '0.78rem', color: '#64748b', margin: '0 0 12px 0' }}>
-              Soil Health Card ke lab N, P, K values (kg/ha) daalein. AgriSense aapke soil reserves ko credit karke exact deficit fertilizer dose nikalega.
+              Enter lab N, P and K values (kg/ha) from your Soil Health Card. AgriSense accounts for your soil reserves to compute the exact deficit fertilizer dose.
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
@@ -558,7 +578,7 @@ export default function FertilizerView({ initialCrop }) {
           {!(formData.N !== '' && formData.P !== '' && formData.K !== '') && (
             <div style={{ padding: '8px 12px', borderRadius: '6px', background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e40af', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <AlertCircle size={16} style={{ flexShrink: 0 }} />
-              <span>Soil Health Card ya lab test ke N, P, K values daalein (ya upar Demo Presets use karein).</span>
+              <span>Enter N, P and K values from your Soil Health Card or lab test (or use Demo Presets above).</span>
             </div>
           )}
 
@@ -732,7 +752,7 @@ export default function FertilizerView({ initialCrop }) {
               }}>
                 <AlertCircle size={18} style={{ flexShrink: 0, color: '#d97706' }} />
                 <span>
-                  ⚠️ Estimated values, lab test se confirm karein. <strong>(Estimated, not for actual application)</strong>
+                  ⚠️ Estimated values. Please confirm with a lab test. <strong>(Estimated, not for actual application)</strong>
                 </span>
               </div>
             )}

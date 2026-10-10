@@ -11,7 +11,7 @@ class SoilFlowAuditTestCase(unittest.TestCase):
         self.client = self.app.test_client()
 
     def test_crop_empty_inputs_return_400(self):
-        """Khali N/P/K/pH inputs par 400 Bad Request milna chahiye."""
+        """Empty N/P/K/pH inputs should return 400 Bad Request."""
         payload_empty = {
             "N": "",
             "P": 48,
@@ -28,7 +28,7 @@ class SoilFlowAuditTestCase(unittest.TestCase):
         self.assertIn("Soil Health Card", data["error"])
 
     def test_crop_invalid_bounds_return_400(self):
-        """Negative NPK ya invalid pH par 400 milna chahiye."""
+        """Negative NPK or invalid pH should return 400 Bad Request."""
         # Negative N
         res1 = self.client.post(
             "/api/recommend/crop",
@@ -46,7 +46,7 @@ class SoilFlowAuditTestCase(unittest.TestCase):
         self.assertIn("between 0.0 and 14.0", res2.get_json()["error"])
 
     def test_fertilizer_empty_inputs_return_400(self):
-        """Fertilizer me khali N, P, K par 400 milna chahiye (500 crash nahi hona chahiye)."""
+        """Empty N, P, K in fertilizer recommendation should return 400 Bad Request without crashing."""
         payload_empty = {
             "N": "",
             "P": 20,
@@ -61,7 +61,7 @@ class SoilFlowAuditTestCase(unittest.TestCase):
         self.assertIn("Soil Health Card", data["error"])
 
     def test_fertilizer_negative_inputs_return_400(self):
-        """Negative NPK par 400 milna chahiye."""
+        """Negative NPK should return 400 Bad Request."""
         payload_neg = {
             "N": 40,
             "P": -10,
@@ -75,7 +75,7 @@ class SoilFlowAuditTestCase(unittest.TestCase):
         self.assertIn("negative", data["error"].lower())
 
     def test_crop_demo_estimated_data_source(self):
-        """Demo estimated data source hone par response me warning tag aana chahiye."""
+        """Demo estimated data source should include an estimated warning."""
         payload = {
             "N": 90,
             "P": 50,
@@ -94,7 +94,7 @@ class SoilFlowAuditTestCase(unittest.TestCase):
         self.assertIsNotNone(data["estimated_warning"])
 
     def test_fertilizer_demo_estimated_warning(self):
-        """Fertilizer me demo estimated values hone par 'Estimated, not for actual application' aana chahiye."""
+        """Demo estimated values in fertilizer should have 'Estimated, not for actual application'."""
         payload = {
             "N": 40,
             "P": 20,
@@ -112,7 +112,7 @@ class SoilFlowAuditTestCase(unittest.TestCase):
         self.assertIn("not for actual application", data["scientific_plan"]["estimated_warning"])
 
     def test_pdf_report_with_demo_estimated_source(self):
-        """Report PDF me N, P, K, pH, Data Source aur Demo estimated warning box aana chahiye."""
+        """PDF report with Demo estimated source should include warning boxes and tags."""
         payload = {
             "farmer_name": "Ramesh Kumar",
             "location": "Varanasi, UP",
@@ -152,8 +152,13 @@ class SoilFlowAuditTestCase(unittest.TestCase):
         self.assertIn("Estimated, not for actual application", text)
         self.assertIn("Soil Chemistry", text)
 
+        hindi_forbidden = ["kripya", "daalein", "karein", "bharein", "hai", "hoga", "nahi", "mausam", "mitti", "fasal", "kisan", "aur", "se", "ke liye", "badlein", "anivarya"]
+        pdf_words = [w.strip(".,;:()[]{}<>!?\"'—–-") for w in text.lower().split()]
+        for hw in hindi_forbidden:
+            self.assertNotIn(hw, pdf_words, f"Found Hindi word '{hw}' in PDF text")
+
     def test_pdf_report_with_lab_test_source(self):
-        """Report PDF me Lab test hone par amber warning nahi aana chahiye."""
+        """PDF report with Lab test source should not include the amber warning box."""
         payload = {
             "farmer_name": "Suresh Patel",
             "location": "Surat, Gujarat",
@@ -191,6 +196,281 @@ class SoilFlowAuditTestCase(unittest.TestCase):
         self.assertIn("Lab test", text)
         self.assertNotIn("Estimated Values Warning", text)
 
+    def test_irrigation_drip_formula_known_input(self):
+        """Audit Item 3 & 9: Known-input drip runtime test.
+        Given: Net Need = 5.2 mm, Emitter = 2.0 LPH, Spacing = 0.4m x 0.8m, Efficiency = 90%.
+        Application Rate = 2.0 / (0.4 * 0.8) = 6.25 mm/hr.
+        Net Runtime (100% eff) = 5.2 / 6.25 = 0.832 hrs (~0.83 h).
+        Gross Runtime (90% eff) = (5.2 / 6.25) / 0.90 = 5.2 / 5.625 = 0.924 hrs (~0.92 h or ~0.93 h).
+        """
+        payload = {
+            "farmer_name": "Test Farmer",
+            "location": "Coimbatore, Tamil Nadu",
+            "area": 2.0,
+            "area_unit": "Acres",
+            "irrigation_data": {
+                "weekly_schedule": [
+                    {
+                        "day": "Day 1",
+                        "rainfall_mm": 0.0,
+                        "et0_mm": 5.2,
+                        "temp_max": 30,
+                    }
+                ]
+            },
+        }
+        res = self.client.post("/api/report/generate", json=payload)
+        self.assertEqual(res.status_code, 200)
+        reader = PdfReader(io.BytesIO(res.data))
+        text = "".join([p.extract_text() for p in reader.pages])
+
+        # Verify application rate & formula line
+        self.assertIn("6.25 mm/hr", text)
+        self.assertIn("0.83h @ 100% eff", text)
+        self.assertIn("0.92h gross", text)
+
+        # Check Day 1 action displays Irrigate with ~0.9h drip runtime
+        self.assertIn("Irrigate (Drip 0.9h)", text)
+
+    def test_irrigation_skip_rule(self):
+        """Audit Item 2, 5 & 9: When rainfall >= ET0, net need is 0.0 mm and action is Skip (Rainfall)."""
+        payload = {
+            "farmer_name": "Test Farmer",
+            "location": "Coimbatore, Tamil Nadu",
+            "irrigation_data": {
+                "weekly_schedule": [
+                    {
+                        "day": "Rainy Day",
+                        "rainfall_mm": 6.0,
+                        "et0_mm": 4.8,
+                        "temp_max": 28,
+                    }
+                ]
+            },
+        }
+        res = self.client.post("/api/report/generate", json=payload)
+        self.assertEqual(res.status_code, 200)
+        reader = PdfReader(io.BytesIO(res.data))
+        text = "".join([p.extract_text() for p in reader.pages])
+
+        self.assertIn("Skip (Rainfall)", text)
+        self.assertIn("0.0 mm", text)
+
+    def test_weather_forecast_unavailable_in_pdf(self):
+        """Audit Item 1 & 9: When weather forecast is missing/empty, PDF displays 'Weather forecast unavailable'
+        instead of fabricating fake days or rainfall values.
+        """
+        payload = {
+            "farmer_name": "Test Farmer",
+            "location": "Coimbatore, Tamil Nadu",
+            "irrigation_data": {
+                "weekly_schedule": []
+            },
+        }
+        res = self.client.post("/api/report/generate", json=payload)
+        self.assertEqual(res.status_code, 200)
+        reader = PdfReader(io.BytesIO(res.data))
+        text = "".join([p.extract_text() for p in reader.pages])
+
+        self.assertIn("Weather forecast unavailable", text)
+    def test_weather_forecast_starts_today_regression(self):
+        """Regression test for Item 2: Forecast array offset bug after past_days=30.
+        First date in forecast MUST equal today's calendar date in IST.
+        """
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+        from app.services.weather_service import get_weather_data
+
+        weather = get_weather_data("Coimbatore")
+        self.assertIn("forecast", weather)
+        self.assertGreaterEqual(len(weather["forecast"]), 7)
+
+        today_ist = datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%Y-%m-%d")
+        first_date = weather["forecast"][0]["date"]
+        self.assertEqual(first_date, today_ist, f"Forecast first date '{first_date}' must be today '{today_ist}'")
+        self.assertEqual(weather["forecast"][0]["day"], "Today")
+
+    def test_crop_top1_sanity_and_api_pdf_match(self):
+        """Sanity test: Call /api/recommend/crop with known inputs, verify Top-1 & Top-3
+        from ML API are dynamically present in the PDF without hardcoded assertions.
+        """
+        known_payload = {
+            "N": 90,
+            "P": 42,
+            "K": 43,
+            "ph": 6.5,
+            "temperature": 24,
+            "humidity": 82,
+            "rainfall": 210,
+        }
+        crop_res = self.client.post("/api/recommend/crop", json=known_payload)
+        self.assertEqual(crop_res.status_code, 200)
+        c_data = crop_res.get_json()
+        self.assertTrue(c_data["success"])
+        top_crop_name = c_data["crop"].capitalize()
+        self.assertIn("top_crops", c_data)
+        self.assertGreaterEqual(len(c_data["top_crops"]), 1)
+
+        pdf_payload = {
+            "farmer_name": "Test Farmer",
+            "location": "Coimbatore, Tamil Nadu",
+            "area": 2.0,
+            "area_unit": "Acres",
+            "crop_data": {
+                "crop": c_data["crop"],
+                "confidence": c_data["confidence"],
+                "top_crops": c_data["top_crops"],
+            },
+        }
+        res = self.client.post("/api/report/generate", json=pdf_payload)
+        self.assertEqual(res.status_code, 200)
+        reader = PdfReader(io.BytesIO(res.data))
+        text = "".join([p.extract_text() for p in reader.pages])
+
+        self.assertIn("1. Crop Recommendation (Machine Learning Model)", text)
+        self.assertIn("Probability (%)", text)
+        self.assertIn(top_crop_name, text)
+        for crop_item in c_data["top_crops"][:3]:
+            self.assertIn(crop_item["crop"].capitalize(), text)
+
+    def test_crop_prediction_unavailable_when_no_data(self):
+        """When crop_data is empty/missing, PDF shows '1. Crop Recommendation (Unavailable)'
+        and does NOT fabricate fake ranks.
+        """
+        payload = {
+            "farmer_name": "Test Farmer",
+            "location": "Coimbatore, Tamil Nadu",
+            "area": 2.0,
+            "area_unit": "Acres",
+            "crop_data": {},
+        }
+        res = self.client.post("/api/report/generate", json=payload)
+        self.assertEqual(res.status_code, 200)
+        reader = PdfReader(io.BytesIO(res.data))
+        text = "".join([p.extract_text() for p in reader.pages])
+
+        self.assertIn("1. Crop Recommendation (Unavailable)", text)
+        self.assertIn("Crop prediction unavailable", text)
+
+    def test_fertilizer_bags_scaled_by_area(self):
+        """Formula test: Total kg = kg/acre * area; bags = total kg / 50.
+        For 2.0 acres: DAP 35.2 * 2 = 70.4 kg = 1.41 bags.
+        """
+        payload = {
+            "farmer_name": "Test Farmer",
+            "location": "Coimbatore, Tamil Nadu",
+            "area": 2.0,
+            "area_unit": "Acres",
+            "fertilizer_data": {
+                "dap_kg": 35.2,
+                "urea_kg": 56.6,
+                "mop_kg": 16.8,
+            },
+        }
+        res = self.client.post("/api/report/generate", json=payload)
+        self.assertEqual(res.status_code, 200)
+        reader = PdfReader(io.BytesIO(res.data))
+        text = "".join([p.extract_text() for p in reader.pages])
+
+        self.assertIn("Total for 2.0 Acres", text)
+        self.assertIn("70.4 kg", text)
+        self.assertIn("1.41 Bags", text)
+        self.assertIn("35.2 × 2.0 = 70.4 kg = 1.41 bags", text)
+
+    def test_irrigation_forecast_source_and_frequency_count(self):
+        """Forecast source printed; frequency count matches schedule; fallback warning triggered."""
+        # 1. Live source with varied days
+        payload_live = {
+            "farmer_name": "Test Farmer",
+            "location": "Coimbatore, Tamil Nadu",
+            "area": 2.0,
+            "area_unit": "Acres",
+            "irrigation_data": {
+                "forecast_source": "Open-Meteo API (Live Telemetry)",
+                "weekly_schedule": [
+                    {"day": "Today", "date": "2026-10-10", "rainfall_mm": 0.0, "et0_mm": 5.2, "temp_max": 30},
+                    {"day": "Sun", "date": "2026-10-11", "rainfall_mm": 6.0, "et0_mm": 4.0, "temp_max": 28},
+                    {"day": "Mon", "date": "2026-10-12", "rainfall_mm": 0.0, "et0_mm": 4.8, "temp_max": 29},
+                ],
+            },
+        }
+        res = self.client.post("/api/report/generate", json=payload_live)
+        self.assertEqual(res.status_code, 200)
+        reader = PdfReader(io.BytesIO(res.data))
+        text_live = "".join([p.extract_text() for p in reader.pages])
+
+        self.assertIn("Open-Meteo API", text_live)
+        self.assertIn("Live Telemetry", text_live)
+        # Day 1 and Day 3 irrigate, Day 2 skips (6mm rain >= 4mm et0) -> 2 of 3 days irrigated
+        self.assertIn("Daily Water Balance", text_live)
+        self.assertIn("2 of 3 days", text_live)
+        self.assertIn("irrigated", text_live)
+
+        # 2. Fallback source triggers warning banner
+        payload_fallback = {
+            "farmer_name": "Test Farmer",
+            "location": "Coimbatore, Tamil Nadu",
+            "area": 2.0,
+            "area_unit": "Acres",
+            "irrigation_data": {
+                "forecast_source": "Fallback (Agro-climatic Regional Baseline)",
+                "weekly_schedule": [
+                    {"day": "Today", "date": "2026-10-10", "rainfall_mm": 0.0, "et0_mm": 5.0, "temp_max": 30},
+                    {"day": "Sun", "date": "2026-10-11", "rainfall_mm": 0.0, "et0_mm": 5.0, "temp_max": 30},
+                ],
+            },
+        }
+        res2 = self.client.post("/api/report/generate", json=payload_fallback)
+        self.assertEqual(res2.status_code, 200)
+        reader2 = PdfReader(io.BytesIO(res2.data))
+        text_fallback = "".join([p.extract_text() for p in reader2.pages])
+        self.assertIn("Forecast Advisory: Forecast unavailable, using estimated average", text_fallback)
+
+    def test_harvest_sowing_date_states_and_cycle_label(self):
+        """Harvest section:
+        - When sowing date not provided: 'Sowing date not set; harvest date unavailable'
+        - When sowing date >= today: 'Crop cycle: 125 days; harvest on <date>'
+        - When sowing date < today: '<N> days remaining'
+        - Source: '(Source: User entered)'
+        """
+        # Case A: Sowing date missing
+        payload_none = {
+            "farmer_name": "Test Farmer",
+            "location": "Coimbatore, Tamil Nadu",
+            "harvest_data": {},
+        }
+        res_a = self.client.post("/api/report/generate", json=payload_none)
+        text_a = "".join([p.extract_text() for p in PdfReader(io.BytesIO(res_a.data)).pages])
+        self.assertIn("Sowing date not set; harvest date unavailable", text_a)
+
+        # Case B: Sowing date today/future
+        payload_future = {
+            "farmer_name": "Test Farmer",
+            "location": "Coimbatore, Tamil Nadu",
+            "harvest_data": {
+                "sowing_date": "2026-10-10",
+                "crop_cycle_days": 125,
+            },
+        }
+        res_b = self.client.post("/api/report/generate", json=payload_future)
+        text_b = "".join([p.extract_text() for p in PdfReader(io.BytesIO(res_b.data)).pages])
+        self.assertIn("Crop cycle: 125 days; harvest on", text_b)
+        self.assertIn("(Source: User entered)", text_b)
+
+        # Case C: Sowing date in past (e.g. 2026-08-01, 70 days ago)
+        payload_past = {
+            "farmer_name": "Test Farmer",
+            "location": "Coimbatore, Tamil Nadu",
+            "harvest_data": {
+                "sowing_date": "2026-08-01",
+                "crop_cycle_days": 125,
+            },
+        }
+        res_c = self.client.post("/api/report/generate", json=payload_past)
+        text_c = "".join([p.extract_text() for p in PdfReader(io.BytesIO(res_c.data)).pages])
+        self.assertIn("days remaining (harvest on", text_c)
+
 
 if __name__ == "__main__":
     unittest.main()
+

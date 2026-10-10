@@ -56,6 +56,121 @@ class AgriSenseAPITestCase(unittest.TestCase):
         data = response.get_json()
         self.assertFalse(data["success"])
 
+    def test_crop_recommendation_validation_empty_fields(self):
+        """Empty string in any nutrient field must return HTTP 400."""
+        payload = {"N": "", "P": 42, "K": 40, "ph": 6.5}
+        response = self.client.post("/api/recommend/crop", json=payload)
+        self.assertEqual(response.status_code, 400)
+        data = response.get_json()
+        self.assertFalse(data["success"])
+
+    def test_crop_recommendation_30_days_weather_autofill(self):
+        """When climate values are omitted, backend auto-fills 30-day metrics (mean temp/humidity, 30-day rainfall)."""
+        payload = {
+            "N": 85,
+            "P": 48,
+            "K": 40,
+            "ph": 6.4,
+            "location": "Pune",
+        }
+        response = self.client.post("/api/recommend/crop", json=payload)
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertTrue(data["success"])
+        env = data["environmental_conditions"]
+        # Rainfall must be 30-day cumulative (e.g. >= 50 mm), NOT 0 or single-hour precipitation
+        self.assertGreaterEqual(env["rainfall"], 50.0)
+        self.assertGreaterEqual(env["temperature"], 10.0)
+        self.assertGreaterEqual(env["humidity"], 20.0)
+
+    def test_crop_recommendation_location_sync(self):
+        """Header/Active location synchronizes with weather environmental conditions."""
+        payload = {
+            "N": 90,
+            "P": 45,
+            "K": 40,
+            "ph": 6.8,
+            "location": "Coimbatore",
+        }
+        response = self.client.post("/api/recommend/crop", json=payload)
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertTrue(data["success"])
+        self.assertIn("Coimbatore", data["environmental_conditions"]["city"])
+
+    def test_soil_crop_suitability_endpoint(self):
+        """Verify soil suitability general guidance endpoint returns 5 soils with UNVERIFIED source."""
+        response = self.client.get("/api/soil-crop-suitability")
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertTrue(data["success"])
+        self.assertIn("Black", data["data"])
+        self.assertIn("Clayey", data["data"])
+        self.assertIn("Loamy", data["data"])
+        self.assertIn("Red", data["data"])
+        self.assertIn("Sandy", data["data"])
+        self.assertEqual(data["data"]["Black"]["source"], "UNVERIFIED")
+
+    def test_weather_forecast_starts_today_and_differentiates_30_days_mean(self):
+        """Regression test: Forecast must start from Today (not 30 days ago), and 30-day mean computed from history."""
+        from datetime import datetime, timedelta
+        from unittest.mock import patch, MagicMock
+
+        today_dt = datetime.now()
+        today_str = today_dt.strftime("%Y-%m-%d")
+
+        # Mock Open-Meteo response with 30 past days + 7 forecast days
+        mock_times = [(today_dt - timedelta(days=30-i)).strftime("%Y-%m-%d") for i in range(30)]
+        mock_times.append(today_str)
+        for i in range(1, 7):
+            mock_times.append((today_dt + timedelta(days=i)).strftime("%Y-%m-%d"))
+
+        mock_maxs = [22.0 + (i % 5) for i in range(len(mock_times))]
+        mock_mins = [14.0 + (i % 3) for i in range(len(mock_times))]
+        mock_rains = [2.5 if i % 4 == 0 else 0.0 for i in range(len(mock_times))]
+        mock_et0s = [3.5 for _ in range(len(mock_times))]
+        mock_codes = [1 for _ in range(len(mock_times))]
+
+        fake_resp = MagicMock()
+        fake_resp.status_code = 200
+        fake_resp.json.return_value = {
+            "current": {
+                "temperature_2m": 31.0,
+                "relative_humidity_2m": 55,
+                "apparent_temperature": 32.0,
+                "precipitation": 0.0,
+                "weather_code": 1,
+                "wind_speed_10m": 8.0,
+                "time": today_str + "T12:00"
+            },
+            "hourly": {
+                "precipitation_probability": [10] * (len(mock_times) * 24),
+                "relative_humidity_2m": [60] * (len(mock_times) * 24),
+                "time": [f"2026-10-01T{h:02d}:00" for h in range(24)]
+            },
+            "daily": {
+                "time": mock_times,
+                "temperature_2m_max": mock_maxs,
+                "temperature_2m_min": mock_mins,
+                "precipitation_sum": mock_rains,
+                "precipitation_probability_max": [15] * len(mock_times),
+                "weather_code": mock_codes,
+                "et0_fao_evapotranspiration": mock_et0s
+            }
+        }
+
+        with patch("requests.get", return_value=fake_resp):
+            from app.services.weather_service import get_weather_data, WEATHER_CACHE
+            WEATHER_CACHE.clear()
+            w = get_weather_data("TestCity", lat=12.34, lon=56.78)
+            # 1. Forecast must have 7 days
+            self.assertEqual(len(w["forecast"]), 7)
+            # 2. First day must be Today with current date
+            self.assertEqual(w["forecast"][0]["day"], "Today")
+            self.assertEqual(w["forecast"][0]["date"], today_str)
+            # 3. 30-day mean temperature must be calculated from past days, NOT equal to instantaneous current temp
+            self.assertNotEqual(w["temperature_last_30_days"], w["temperature"])
+
     def test_crop_recommendation_top3_schema(self):
         """Audit Fix #5 & #7: Response must return Top-3 crops with probabilities, ranks, and confidence gap."""
         payload = {
@@ -489,8 +604,26 @@ class AgriSenseAPITestCase(unittest.TestCase):
 
         self.assertIn("Rice", pdf_text)
         self.assertIn("Ramesh Patel", pdf_text)
-        self.assertIn("Local agriculture officer", pdf_text)
+        self.assertIn("local agriculture officer", pdf_text)
         self.assertIn("UNVERIFIED", pdf_text)
+        self.assertIn("LEGAL DISCLAIMER", pdf_text)
+
+        # Ensure no Hindi/Hinglish words are in the PDF text
+        hindi_forbidden = ["kripya", "daalein", "karein", "bharein", "hai", "hoga", "nahi", "mausam", "mitti", "fasal", "kisan", "aur", "se", "ke liye", "badlein", "anivarya"]
+        pdf_words = [w.strip(".,;:()[]{}<>!?\"'—–-") for w in pdf_text.lower().split()]
+        for hw in hindi_forbidden:
+            self.assertNotIn(hw, pdf_words, f"Found Hindi/Hinglish word '{hw}' in PDF text")
+
+        # Also test Unicode support (Devanagari & Tamil farmer names)
+        unicode_payload = dict(payload)
+        unicode_payload["farmer_name"] = "रामेश कुमार (ரமேஷ்)"
+        unicode_payload["location"] = "वाराणसी, उत्तर प्रदेश"
+        u_resp = self.client.post("/api/report/generate", json=unicode_payload)
+        self.assertEqual(u_resp.status_code, 200)
+        u_reader = PdfReader(io.BytesIO(u_resp.data))
+        u_text = "".join([p.extract_text() for p in u_reader.pages])
+        self.assertIn("रामेश कुमार", u_text)
+        self.assertIn("ரமேஷ்", u_text)
 
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
+import json
 import os
 from datetime import datetime
 
@@ -22,7 +23,7 @@ def recommend_crop():
     required_fields = ["N", "P", "K", "ph"]
     for f in required_fields:
         if f not in data or data[f] is None or str(data[f]).strip() == "":
-            return jsonify({"success": False, "error": "Soil Health Card ya lab test ke N, P, K, pH values daalein."}), 400
+            return jsonify({"success": False, "error": "Enter N, P, K and pH values from your Soil Health Card or lab test."}), 400
 
     try:
         try:
@@ -31,7 +32,7 @@ def recommend_crop():
             data["K"] = float(data["K"])
             data["ph"] = float(data["ph"])
         except (ValueError, TypeError):
-            return jsonify({"success": False, "error": "Soil Health Card ya lab test ke N, P, K, pH values daalein (numeric values required)."}), 400
+            return jsonify({"success": False, "error": "Enter numeric N, P, K and pH values from your Soil Health Card or lab test."}), 400
 
         # Validate physiological bounds
         if not (0 <= data["ph"] <= 14):
@@ -56,9 +57,21 @@ def recommend_crop():
         else:
             weather = {}
 
-        data["temperature"] = float(data["temperature"]) if has_temp else float(weather.get("temperature", 25.0))
-        data["humidity"] = float(data["humidity"]) if has_hum else float(weather.get("humidity", 65.0))
-        data["rainfall"] = float(data["rainfall"]) if has_rain else float(weather.get("rainfall", 100.0))
+        data["temperature"] = (
+            float(data["temperature"])
+            if has_temp
+            else float(weather.get("temperature_last_30_days", weather.get("temperature", 25.0)))
+        )
+        data["humidity"] = (
+            float(data["humidity"])
+            if has_hum
+            else float(weather.get("humidity_last_30_days", weather.get("humidity", 65.0)))
+        )
+        data["rainfall"] = (
+            float(data["rainfall"])
+            if has_rain
+            else float(weather.get("rainfall_last_30_days", 85.0))
+        )
 
         # Predict crop + alternatives + soil health analysis
         result = ml_engine.predict_crop(data)
@@ -115,7 +128,7 @@ def recommend_fertilizer():
         required = ["N", "P", "K"]
         for f in required:
             if f not in data or data[f] is None or str(data[f]).strip() == "":
-                return jsonify({"success": False, "error": "Soil Health Card ya lab test ke N, P, K values daalein."}), 400
+                return jsonify({"success": False, "error": "Enter N, P and K values from your Soil Health Card or lab test."}), 400
 
         try:
             data["N"] = float(data["N"])
@@ -489,3 +502,24 @@ def generate_report_card_pdf():
     except Exception as e:
         print(f"❌ Error generating report card PDF: {e!s}")
         return jsonify({"success": False, "error": f"Failed to generate PDF: {e!s}"}), 500
+
+
+# -------------------------------------------------------------
+# 8. Soil Crop Suitability General Guidance Endpoint (Source: UNVERIFIED)
+# -------------------------------------------------------------
+@predict_bp.route("/api/soil-crop-suitability", methods=["GET"])
+@predict_bp.route("/api/soil/suitability", methods=["GET"])
+def get_soil_crop_suitability():
+    """Returns general agronomic soil crop suitability guidance (Source: UNVERIFIED)."""
+    try:
+        data_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "soil_crop_suitability.json"
+        )
+        if os.path.exists(data_path):
+            with open(data_path, "r", encoding="utf-8") as f:
+                suitability_data = json.load(f)
+            return jsonify({"success": True, "data": suitability_data}), 200
+        return jsonify({"success": False, "error": "Suitability data file not found"}), 404
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+

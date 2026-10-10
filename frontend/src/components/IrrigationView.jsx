@@ -69,15 +69,40 @@ const LAND_UNITS = [
   { value: 'hectares', label: 'Hectares' }
 ];
 
-export default function IrrigationView({ activeLocation = 'Coimbatore', initialCrop = 'rice' }) {
+export default function IrrigationView({ 
+  activeLocation = 'Coimbatore', 
+  initialCrop = 'rice', 
+  soilData, 
+  farmArea = 2,
+  farmAreaUnit = 'acres',
+  onUpdateFarmArea,
+  onUpdateFarmAreaUnit,
+  onUpdateSoil 
+}) {
   const [crop, setCrop] = useState(initialCrop || 'rice');
   const [stage, setStage] = useState('vegetative');
-  const [soilType, setSoilType] = useState('Loamy');
-  const [area, setArea] = useState(2);
-  const [areaUnit, setAreaUnit] = useState('acres');
+  const [soilType, setSoilType] = useState(soilData?.soil_type || 'Loamy');
+  const [area, setArea] = useState(farmArea);
+  const [areaUnit, setAreaUnit] = useState(farmAreaUnit);
   const [temperature, setTemperature] = useState(28);
   const [humidity, setHumidity] = useState(60);
   const [rainfall, setRainfall] = useState(0);
+
+  // Sync with global farmArea from App.jsx
+  useEffect(() => {
+    if (farmArea) setArea(farmArea);
+  }, [farmArea]);
+
+  useEffect(() => {
+    if (farmAreaUnit) setAreaUnit(farmAreaUnit);
+  }, [farmAreaUnit]);
+
+  // Sync with global soil state from App.jsx
+  useEffect(() => {
+    if (soilData?.soil_type) {
+      setSoilType(soilData.soil_type);
+    }
+  }, [soilData]);
 
   // Hardware Drip Parameters
   const [showAdvancedDrip, setShowAdvancedDrip] = useState(false);
@@ -175,11 +200,13 @@ export default function IrrigationView({ activeLocation = 'Coimbatore', initialC
       </div>
 
       {/* 2. Main 2-Column Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 380px) 1fr', gap: '24px', alignItems: 'start' }}>
+      <div className="responsive-two-col" style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 400px) minmax(0, 1fr)', gap: '24px', alignItems: 'start' }}>
         
         {/* Left Form: Parameters */}
         <div 
           style={{
+            minWidth: 0,
+            boxSizing: 'border-box',
             background: 'var(--bg-card)',
             border: '1px solid var(--border-color)',
             borderRadius: 'var(--radius-xl)',
@@ -225,6 +252,8 @@ export default function IrrigationView({ activeLocation = 'Coimbatore', initialC
                 onChange={(e) => setCrop(e.target.value)}
                 style={{
                   width: '100%',
+                  minWidth: 0,
+                  boxSizing: 'border-box',
                   padding: '10px 14px',
                   borderRadius: 'var(--radius-md)',
                   border: '1px solid var(--border-color)',
@@ -249,6 +278,8 @@ export default function IrrigationView({ activeLocation = 'Coimbatore', initialC
                 onChange={(e) => setStage(e.target.value)}
                 style={{
                   width: '100%',
+                  minWidth: 0,
+                  boxSizing: 'border-box',
                   padding: '10px 14px',
                   borderRadius: 'var(--radius-md)',
                   border: '1px solid var(--border-color)',
@@ -267,7 +298,7 @@ export default function IrrigationView({ activeLocation = 'Coimbatore', initialC
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                 <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', margin: 0 }}>
-                  Soil Texture (Soil type badlein)
+                  Soil Texture (Change soil type)
                 </label>
                 <span style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', padding: '1px 6px', borderRadius: '4px', fontSize: '0.68rem', fontWeight: 700 }}>
                   user-selected
@@ -275,9 +306,19 @@ export default function IrrigationView({ activeLocation = 'Coimbatore', initialC
               </div>
               <select
                 value={soilType}
-                onChange={(e) => setSoilType(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSoilType(val);
+                  if (onUpdateSoil) onUpdateSoil(val, null, 'user-selected');
+                }}
                 style={{
                   width: '100%',
+                  maxWidth: '100%',
+                  minWidth: 0,
+                  boxSizing: 'border-box',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                   padding: '10px 14px',
                   borderRadius: 'var(--radius-md)',
                   border: '1px solid var(--border-color)',
@@ -297,15 +338,21 @@ export default function IrrigationView({ activeLocation = 'Coimbatore', initialC
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '6px' }}>
                 Cultivated Farm Land Area
               </label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '0.75rem' }}>
                 <input
                   type="number"
                   step="0.1"
                   min="0.1"
                   value={area}
-                  onChange={(e) => setArea(e.target.value)}
+                  onChange={(e) => {
+                    setArea(e.target.value);
+                    if (onUpdateFarmArea) onUpdateFarmArea(e.target.value);
+                  }}
                   placeholder="2"
                   style={{
+                    width: '100%',
+                    minWidth: 0,
+                    boxSizing: 'border-box',
                     padding: '10px 14px',
                     borderRadius: 'var(--radius-md)',
                     border: '1px solid var(--border-color)',
@@ -315,13 +362,23 @@ export default function IrrigationView({ activeLocation = 'Coimbatore', initialC
                 />
                 <select
                   value={areaUnit}
-                  onChange={(e) => setAreaUnit(e.target.value)}
+                  onChange={(e) => {
+                    setAreaUnit(e.target.value);
+                    if (onUpdateFarmAreaUnit) onUpdateFarmAreaUnit(e.target.value);
+                  }}
                   style={{
+                    width: '100%',
+                    maxWidth: '100%',
+                    minWidth: 0,
+                    boxSizing: 'border-box',
+                    overflow: 'hidden',
                     padding: '10px 12px',
                     borderRadius: 'var(--radius-md)',
                     border: '1px solid var(--border-color)',
                     background: 'var(--bg-card)',
-                    fontSize: '13px'
+                    fontSize: '13px',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
                   }}
                 >
                   {LAND_UNITS.map((u) => (
@@ -343,7 +400,7 @@ export default function IrrigationView({ activeLocation = 'Coimbatore', initialC
                     type="number"
                     value={temperature}
                     onChange={(e) => setTemperature(e.target.value)}
-                    style={{ width: '100%', padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                    style={{ width: '100%', minWidth: 0, boxSizing: 'border-box', padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)' }}
                   />
                 </div>
                 <div>
@@ -352,7 +409,7 @@ export default function IrrigationView({ activeLocation = 'Coimbatore', initialC
                     type="number"
                     value={humidity}
                     onChange={(e) => setHumidity(e.target.value)}
-                    style={{ width: '100%', padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                    style={{ width: '100%', minWidth: 0, boxSizing: 'border-box', padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)' }}
                   />
                 </div>
                 <div>
@@ -361,7 +418,7 @@ export default function IrrigationView({ activeLocation = 'Coimbatore', initialC
                     type="number"
                     value={rainfall}
                     onChange={(e) => setRainfall(e.target.value)}
-                    style={{ width: '100%', padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                    style={{ width: '100%', minWidth: 0, boxSizing: 'border-box', padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)' }}
                   />
                 </div>
               </div>
@@ -396,7 +453,7 @@ export default function IrrigationView({ activeLocation = 'Coimbatore', initialC
                       step="0.1"
                       value={emitterLph}
                       onChange={(e) => setEmitterLph(e.target.value)}
-                      style={{ width: '100%', padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                      style={{ width: '100%', minWidth: 0, boxSizing: 'border-box', padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)' }}
                     />
                   </div>
                   <div>
@@ -406,7 +463,7 @@ export default function IrrigationView({ activeLocation = 'Coimbatore', initialC
                       step="0.1"
                       value={emitterSpacingM}
                       onChange={(e) => setEmitterSpacingM(e.target.value)}
-                      style={{ width: '100%', padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                      style={{ width: '100%', minWidth: 0, boxSizing: 'border-box', padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)' }}
                     />
                   </div>
                   <div>
@@ -416,7 +473,7 @@ export default function IrrigationView({ activeLocation = 'Coimbatore', initialC
                       step="0.1"
                       value={lateralSpacingM}
                       onChange={(e) => setLateralSpacingM(e.target.value)}
-                      style={{ width: '100%', padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                      style={{ width: '100%', minWidth: 0, boxSizing: 'border-box', padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)' }}
                     />
                   </div>
                 </div>
@@ -463,7 +520,7 @@ export default function IrrigationView({ activeLocation = 'Coimbatore', initialC
         </div>
 
         {/* Right Content: Hydrological & Irrigation Results */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', minWidth: 0 }}>
           {planResult ? (
             <>
               {/* Method Attribution & Dynamic Status Advisory Banner */}
@@ -505,7 +562,7 @@ export default function IrrigationView({ activeLocation = 'Coimbatore', initialC
               </div>
 
               {/* 4 Stat Cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
                 {/* 1. Daily Volume */}
                 <div 
                   style={{
@@ -590,175 +647,6 @@ export default function IrrigationView({ activeLocation = 'Coimbatore', initialC
                   </span>
                 </div>
               </div>
-
-              {/* Drip vs Flood Efficiency Comparison Card */}
-              <div 
-                style={{
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: 'var(--radius-xl)',
-                  padding: '22px 24px',
-                  boxShadow: 'var(--shadow-card)'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                  <h3 style={{ fontSize: '15px', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Droplets size={18} color="#0284c7" /> Drip vs Surface Flood Irrigation Comparison
-                  </h3>
-                  <span style={{ fontSize: '12px', fontWeight: 700, color: '#16a34a', background: '#dcfce7', padding: '3px 10px', borderRadius: '12px' }}>
-                    Saves {((planResult.gross_flood_liters || 0) - (planResult.gross_drip_liters || 0)).toLocaleString()} Liters / day
-                  </span>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '14px' }}>
-                  {/* Drip Option */}
-                  <div style={{ background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: '12px', padding: '14px 16px' }}>
-                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#166534', textTransform: 'uppercase' }}>
-                      💧 Precision Drip (90% Eff)
-                    </div>
-                    <div style={{ fontSize: '22px', fontWeight: 800, color: '#15803d', margin: '4px 0 2px 0' }}>
-                      {(planResult.gross_drip_liters || 0).toLocaleString()} <span style={{ fontSize: '13px' }}>L</span>
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#166534' }}>
-                      Runtime: <strong>{planResult.drip_runtime_hours} hrs</strong> (Low evaporation)
-                    </div>
-                  </div>
-
-                  {/* Sprinkler Option */}
-                  <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '12px', padding: '14px 16px' }}>
-                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#0369a1', textTransform: 'uppercase' }}>
-                      🌧️ Sprinkler (75% Eff)
-                    </div>
-                    <div style={{ fontSize: '22px', fontWeight: 800, color: '#0284c7', margin: '4px 0 2px 0' }}>
-                      {(planResult.gross_sprinkler_liters || 0).toLocaleString()} <span style={{ fontSize: '13px' }}>L</span>
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#0369a1' }}>
-                      Moderate distribution loss
-                    </div>
-                  </div>
-
-                  {/* Flood Option */}
-                  <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '12px', padding: '14px 16px' }}>
-                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#c2410c', textTransform: 'uppercase' }}>
-                      🌊 Surface Furrow / Flood (60% Eff)
-                    </div>
-                    <div style={{ fontSize: '22px', fontWeight: 800, color: '#ea580c', margin: '4px 0 2px 0' }}>
-                      {(planResult.gross_flood_liters || 0).toLocaleString()} <span style={{ fontSize: '13px' }}>L</span>
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#c2410c' }}>
-                      Tubewell 5HP: <strong>{planResult.flood_runtime_hours} hrs</strong> (High percolation)
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Soil Water Balance & Irrigation Interval Card */}
-              {planResult.soil_water_balance && (
-                <div 
-                  style={{
-                    background: 'var(--bg-card)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-xl)',
-                    padding: '20px 24px',
-                    boxShadow: 'var(--shadow-card)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: '16px'
-                  }}
-                >
-                  <div>
-                    <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                      Soil Water Holding Capacity & Stress Threshold
-                    </span>
-                    <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-heading)', marginTop: '2px' }}>
-                      Irrigate Every ~{planResult.soil_water_balance.irrigation_interval_days} Days
-                    </div>
-                    <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                      Root Depth: {planResult.soil_water_balance.rooting_depth_m}m | RAW: {planResult.soil_water_balance.raw_mm} mm before crop moisture stress occurs.
-                    </div>
-                  </div>
-                  <span style={{ fontSize: '11px', fontWeight: 700, background: '#f8fafc', border: '1px solid #e2e8f0', padding: '4px 10px', borderRadius: '8px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span>Soil Adjustment: {planResult.soil_adjustment}</span>
-                    <span style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', padding: '1px 6px', borderRadius: '4px', fontSize: '0.65rem' }}>
-                      user-selected
-                    </span>
-                  </span>
-                </div>
-              )}
-
-              {/* 7-Day Actual Forecast Schedule Table */}
-              <div 
-                style={{
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: 'var(--radius-xl)',
-                  padding: '24px',
-                  boxShadow: 'var(--shadow-card)'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                  <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Calendar size={18} color="#0284c7" /> 7-Day Projected Irrigation Schedule
-                  </h3>
-                  <span style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'var(--bg-card-subtle)', padding: '4px 10px', borderRadius: '6px' }}>
-                    Calculated from daily meteorological forecast
-                  </span>
-                </div>
-
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
-                    <thead>
-                      <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
-                        <th style={{ padding: '10px 12px', fontWeight: 600 }}>Schedule Day</th>
-                        <th style={{ padding: '10px 12px', fontWeight: 600 }}>ET₀ (mm)</th>
-                        <th style={{ padding: '10px 12px', fontWeight: 600 }}>Rain (mm)</th>
-                        <th style={{ padding: '10px 12px', fontWeight: 600 }}>Net Depth</th>
-                        <th style={{ padding: '10px 12px', fontWeight: 600 }}>Drip Volume (90%)</th>
-                        <th style={{ padding: '10px 12px', fontWeight: 600 }}>Runtime</th>
-                        <th style={{ padding: '10px 12px', fontWeight: 600 }}>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {planResult.weekly_schedule?.map((day, idx) => (
-                        <tr 
-                          key={day.day + idx}
-                          style={{
-                            borderBottom: '1px solid var(--border-subtle)',
-                            background: idx === 0 ? 'var(--primary-green-light)' : 'transparent',
-                            fontWeight: idx === 0 ? 700 : 400
-                          }}
-                        >
-                          <td style={{ padding: '12px', color: idx === 0 ? 'var(--primary-green)' : 'var(--text-heading)' }}>
-                            {day.day} {idx === 0 && '⚡'}
-                          </td>
-                          <td style={{ padding: '12px' }}>{day.reference_et0_mm} mm</td>
-                          <td style={{ padding: '12px' }}>{day.rainfall_mm} mm</td>
-                          <td style={{ padding: '12px' }}>{day.water_depth_mm} mm</td>
-                          <td style={{ padding: '12px', fontWeight: 600 }}>{day.liters.toLocaleString()} L</td>
-                          <td style={{ padding: '12px' }}>{day.runtime_hours} hrs</td>
-                          <td style={{ padding: '12px' }}>
-                            <span 
-                              style={{
-                                fontSize: '11px',
-                                fontWeight: 700,
-                                padding: '2px 8px',
-                                borderRadius: '12px',
-                                background: day.status?.includes('Skip') ? '#fef3c7' : '#dcfce7',
-                                color: day.status?.includes('Skip') ? '#92400e' : '#166534'
-                              }}
-                            >
-                              {day.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
             </>
           ) : (
             <div 
@@ -783,6 +671,179 @@ export default function IrrigationView({ activeLocation = 'Coimbatore', initialC
         </div>
 
       </div>
+
+      {/* 3. Full-Width Deep-Dive Sections (Entire Page Fitting on Scroll) */}
+      {planResult && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '24px', width: '100%' }}>
+          {/* Drip vs Flood Efficiency Comparison Card */}
+          <div 
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--radius-xl)',
+              padding: '22px 24px',
+              boxShadow: 'var(--shadow-card)'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Droplets size={18} color="#0284c7" /> Drip vs Surface Flood Irrigation Comparison
+              </h3>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#16a34a', background: '#dcfce7', padding: '3px 10px', borderRadius: '12px' }}>
+                Saves {((planResult.gross_flood_liters || 0) - (planResult.gross_drip_liters || 0)).toLocaleString()} Liters / day
+              </span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' }}>
+              {/* Drip Option */}
+              <div style={{ background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: '12px', padding: '14px 16px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: '#166534', textTransform: 'uppercase' }}>
+                  💧 Precision Drip (90% Eff)
+                </div>
+                <div style={{ fontSize: '22px', fontWeight: 800, color: '#15803d', margin: '4px 0 2px 0' }}>
+                  {(planResult.gross_drip_liters || 0).toLocaleString()} <span style={{ fontSize: '13px' }}>L</span>
+                </div>
+                <div style={{ fontSize: '12px', color: '#166534' }}>
+                  Runtime: <strong>{planResult.drip_runtime_hours} hrs</strong> (Low evaporation)
+                </div>
+              </div>
+
+              {/* Sprinkler Option */}
+              <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '12px', padding: '14px 16px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: '#0369a1', textTransform: 'uppercase' }}>
+                  🌧️ Sprinkler (75% Eff)
+                </div>
+                <div style={{ fontSize: '22px', fontWeight: 800, color: '#0284c7', margin: '4px 0 2px 0' }}>
+                  {(planResult.gross_sprinkler_liters || 0).toLocaleString()} <span style={{ fontSize: '13px' }}>L</span>
+                </div>
+                <div style={{ fontSize: '12px', color: '#0369a1' }}>
+                  Moderate distribution loss
+                </div>
+              </div>
+
+              {/* Flood Option */}
+              <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '12px', padding: '14px 16px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: '#c2410c', textTransform: 'uppercase' }}>
+                  🌊 Surface Furrow / Flood (60% Eff)
+                </div>
+                <div style={{ fontSize: '22px', fontWeight: 800, color: '#ea580c', margin: '4px 0 2px 0' }}>
+                  {(planResult.gross_flood_liters || 0).toLocaleString()} <span style={{ fontSize: '13px' }}>L</span>
+                </div>
+                <div style={{ fontSize: '12px', color: '#c2410c' }}>
+                  Tubewell 5HP: <strong>{planResult.flood_runtime_hours} hrs</strong> (High percolation)
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Soil Water Balance & Irrigation Interval Card */}
+          {planResult.soil_water_balance && (
+            <div 
+              style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 'var(--radius-xl)',
+                padding: '20px 24px',
+                boxShadow: 'var(--shadow-card)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '16px'
+              }}
+            >
+              <div>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  Soil Water Holding Capacity & Stress Threshold
+                </span>
+                <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-heading)', marginTop: '2px' }}>
+                  Irrigate Every ~{planResult.soil_water_balance.irrigation_interval_days} Days
+                </div>
+                <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  Root Depth: {planResult.soil_water_balance.rooting_depth_m}m | RAW: {planResult.soil_water_balance.raw_mm} mm before crop moisture stress occurs.
+                </div>
+              </div>
+              <span style={{ fontSize: '11px', fontWeight: 700, background: '#f8fafc', border: '1px solid #e2e8f0', padding: '4px 10px', borderRadius: '8px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>Soil Adjustment: {planResult.soil_adjustment}</span>
+                <span style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', padding: '1px 6px', borderRadius: '4px', fontSize: '0.65rem' }}>
+                  user-selected
+                </span>
+              </span>
+            </div>
+          )}
+
+          {/* 7-Day Actual Forecast Schedule Table */}
+          <div 
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--radius-xl)',
+              padding: '24px',
+              boxShadow: 'var(--shadow-card)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Calendar size={18} color="#0284c7" /> 7-Day Projected Irrigation Schedule
+              </h3>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'var(--bg-card-subtle)', padding: '4px 10px', borderRadius: '6px' }}>
+                Calculated from daily meteorological forecast
+              </span>
+            </div>
+
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
+                    <th style={{ padding: '10px 12px', fontWeight: 600 }}>Schedule Day</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 600 }}>ET₀ (mm)</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 600 }}>Rain (mm)</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 600 }}>Net Depth</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 600 }}>Drip Volume (90%)</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 600 }}>Runtime</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 600 }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {planResult.weekly_schedule?.map((day, idx) => (
+                    <tr 
+                      key={day.day + idx}
+                      style={{
+                        borderBottom: '1px solid var(--border-subtle)',
+                        background: idx === 0 ? 'var(--primary-green-light)' : 'transparent',
+                        fontWeight: idx === 0 ? 700 : 400
+                      }}
+                    >
+                      <td style={{ padding: '12px', color: idx === 0 ? 'var(--primary-green)' : 'var(--text-heading)' }}>
+                        {day.day} {idx === 0 && '⚡'}
+                      </td>
+                      <td style={{ padding: '12px' }}>{day.reference_et0_mm} mm</td>
+                      <td style={{ padding: '12px' }}>{day.rainfall_mm} mm</td>
+                      <td style={{ padding: '12px' }}>{day.water_depth_mm} mm</td>
+                      <td style={{ padding: '12px', fontWeight: 600 }}>{day.liters.toLocaleString()} L</td>
+                      <td style={{ padding: '12px' }}>{day.runtime_hours} hrs</td>
+                      <td style={{ padding: '12px' }}>
+                        <span 
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            background: day.status?.includes('Skip') ? '#fef3c7' : '#dcfce7',
+                            color: day.status?.includes('Skip') ? '#92400e' : '#166534'
+                          }}
+                        >
+                          {day.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

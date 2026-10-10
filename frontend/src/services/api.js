@@ -79,6 +79,7 @@ export const getCropRecommendation = async (payload) => {
   }
   return response.data;
 };
+export const recommendCrop = getCropRecommendation;
 
 // 4. Fertilizer Recommendation with Instant Sub-millisecond Cache
 export const getFertilizerRecommendation = async (payload) => {
@@ -135,6 +136,12 @@ export const downloadReportCardPdf = async (payload) => {
   const response = await api.post('/api/report/generate', payload, {
     responseType: 'blob'
   });
+  return response.data;
+};
+
+// 10. General Agronomic Soil Crop Suitability Guidance (Source: UNVERIFIED)
+export const getSoilSuitability = async () => {
+  const response = await api.get('/api/soil-crop-suitability');
   return response.data;
 };
 

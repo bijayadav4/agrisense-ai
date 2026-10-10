@@ -48,18 +48,18 @@ export default function Header({ locationName, weatherData, onOpenLocationModal,
         </div>
       </div>
 
-      {/* Right Kisan Helpline Button */}
+      {/* Right Farmer Helpline Button */}
       <div className="header-helpline-section">
         <a 
           href="tel:18001801551" 
           className="kisan-helpline-badge"
-          title="Call Kisan Call Centre (Toll Free: 1800-180-1551)"
+          title="Call Farmer Call Centre (Toll Free: 1800-180-1551)"
         >
           <div className="helpline-icon-circle">
             <PhoneCall size={16} />
           </div>
           <div className="helpline-text-group">
-            <span className="helpline-title">Kisan Helpline (Toll-Free)</span>
+            <span className="helpline-title">Farmer Helpline (Toll-Free)</span>
             <span className="helpline-number">1800-180-1551</span>
           </div>
         </a>

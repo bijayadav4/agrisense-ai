@@ -149,7 +149,7 @@ agrisense-ai/
 - **Confidence Calibration & Temperature Scaling**:
   - Temperature scalar $T = 0.811$ was fitted strictly by minimizing cross-entropy NLL on the **validation set** (test set untouched during tuning).
   - Expected Calibration Error (ECE) on test set improved from **5.31% to 4.36%**.
-  - Risk-derived threshold: Validation samples below 70% confidence exhibited a 32.4% error rate. Hence, when predicted confidence is $<70\%$, the UI issues a proactive warning: *"Low confidence, kripya laboratory soil test karwayein"*.
+  - Risk-derived threshold: Validation samples below 70% confidence exhibited a 32.4% error rate. Hence, when predicted confidence is $<70\%$, the UI issues a proactive warning: *"Low confidence. Please get a laboratory soil test done."*.
 - **External Field Validation (`evaluate_external.py`)**:
   - Independent CLI evaluation tool for smartphone captures and new farm photos:
     ```bash
