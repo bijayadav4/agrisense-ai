@@ -214,7 +214,12 @@ def classify_soil_image():
                 "is_low_confidence": result.get("is_low_confidence", False),
                 "confidence_warning": result.get("confidence_warning"),
                 "profile": result["profile"],
+                # Deprecated alias: consumers should migrate to demo_reference_values_not_measured
                 "estimated_properties": result["estimated_properties"],
+                "demo_reference_values_not_measured": result.get(
+                    "demo_reference_values_not_measured", result["estimated_properties"]
+                ),
+                "note": result.get("note"),
                 "suitable_crops": result["suitable_crops"],
                 "class_probabilities": result["class_probabilities"],
             }

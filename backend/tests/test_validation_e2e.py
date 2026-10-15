@@ -18,6 +18,7 @@ Verifies the complete farmer user flow in real Chromium browser:
 """
 
 import os
+import json
 import time
 import subprocess
 import urllib.request
@@ -25,8 +26,12 @@ import pytest
 from pypdf import PdfReader
 from playwright.sync_api import sync_playwright
 
-ARTIFACT_DIR = "/home/bijayadav/.gemini/antigravity-ide/brain/bda884e5-51e4-452a-abbd-0c3226ec3429"
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+ARTIFACT_DIR = os.environ.get(
+    "TEST_ARTIFACT_DIR",
+    os.path.join(PROJECT_ROOT, "tests", "artifacts"),
+)
+os.makedirs(ARTIFACT_DIR, exist_ok=True)
 VENV_PYTHON = os.path.join(PROJECT_ROOT, "venv/bin/python")
 IMAGE_PATH = os.path.join(PROJECT_ROOT, "ml_models/datasets/soil_images/Loamy/Alluvial_Soil_44.jpg")
 
@@ -201,5 +206,137 @@ def test_playwright_e2e_farmer_flow(app_servers):
                 imgs[0].save(os.path.join(ARTIFACT_DIR, "step7_downloaded_pdf_page1.png"), "PNG")
         except Exception:
             pass
+
+        browser.close()
+
+
+def test_playwright_crop_provenance_banner(app_servers):
+    """
+    Deterministic Playwright test for F1 provenance banner in CropView.jsx:
+    Case A — Wheat: Recommendation contains non-empty provenance_note.
+             The data-testid="provenance-banner" element must be visible and contain the expected message.
+    Case B — Non-Wheat: Non-Wheat recommendation has no provenance_note.
+             The provenance banner must not exist in the rendered DOM.
+    """
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context(viewport={"width": 1440, "height": 900})
+        page = context.new_page()
+
+        # Base mock response structure compatible with CropView.jsx
+        base_resp = {
+            "success": True,
+            "profile": {
+                "recommended_season": "Rabi",
+                "growing_period_days": "120-135",
+                "water_requirement_mm": "450-650",
+            },
+            "top_crops": [
+                {"crop": "Wheat", "probability": 94.2},
+                {"crop": "Barley", "probability": 3.8},
+                {"crop": "Gram", "probability": 2.0},
+            ],
+            "alternatives": ["Barley", "Gram"],
+            "soil_health": {
+                "status": "Optimal",
+                "nitrogen_status": "Optimal",
+                "phosphorus_status": "Optimal",
+                "potassium_status": "Optimal",
+                "ph_status": "Optimal",
+            },
+            "soil_amendments": [],
+            "environmental_conditions": {
+                "city": "Coimbatore, Tamil Nadu",
+                "temperature": 20.0,
+                "humidity": 58.0,
+                "rainfall": 72.0,
+                "condition": "Clear",
+                "advisory": [],
+            },
+        }
+
+        wheat_resp = dict(base_resp)
+        wheat_resp.update({
+            "crop": "Wheat",
+            "confidence": 94.2,
+            "provenance_note": "Limited benchmark data (synthetic ICAR extension)",
+        })
+
+        rice_resp = dict(base_resp)
+        rice_resp.update({
+            "crop": "Rice",
+            "confidence": 98.5,
+            "provenance_note": None,
+            "top_crops": [
+                {"crop": "Rice", "probability": 98.5},
+                {"crop": "Jute", "probability": 1.0},
+                {"crop": "Maize", "probability": 0.5},
+            ],
+            "alternatives": ["Jute", "Maize"],
+        })
+
+        current_mock = {"resp": wheat_resp}
+
+        def handle_crop_route(route):
+            route.fulfill(
+                status=200,
+                content_type="application/json",
+                body=json.dumps(current_mock["resp"]),
+            )
+
+        page.route("**/api/recommend/crop", handle_crop_route)
+
+        # Step 1: Open app and navigate to Crop Recommendation tab
+        page.goto("http://localhost:5173/", wait_until="networkidle")
+        page.click("button:has-text('Crop Recommendation')")
+        page.wait_for_selector("input[name='N']", timeout=5000)
+
+        # -------------------------------------------------------------
+        # Case A — Wheat: Recommendation has non-empty provenance_note
+        # -------------------------------------------------------------
+        current_mock["resp"] = wheat_resp
+        page.fill("input[name='N']", "94")
+        page.fill("input[name='P']", "50")
+        page.fill("input[name='K']", "40")
+        page.fill("input[name='ph']", "6.6")
+
+        page.click("button:has-text('Recommend Best Crops')")
+        page.wait_for_selector(".result-crop-big", timeout=10000)
+
+        crop_a = page.locator(".result-crop-big").inner_text()
+        assert "wheat" in crop_a.lower(), f"Expected Wheat in Case A, got: {crop_a}"
+
+        banner = page.locator("[data-testid='provenance-banner']")
+        assert banner.is_visible(), "Case A: data-testid='provenance-banner' must be visible for Wheat"
+        banner_text = banner.inner_text()
+        assert "Benchmark Data Provenance Notice" in banner_text, f"Case A: Expected notice header, got: {banner_text}"
+        assert "Limited benchmark data (synthetic ICAR extension)" in banner_text, f"Case A: Expected note text, got: {banner_text}"
+
+        screenshot_case_a = os.path.join(ARTIFACT_DIR, "step_f1_wheat_provenance_banner.png")
+        page.screenshot(path=screenshot_case_a)
+        assert os.path.exists(screenshot_case_a)
+
+        # -------------------------------------------------------------
+        # Case B — Non-Wheat: Recommendation has no provenance_note
+        # -------------------------------------------------------------
+        current_mock["resp"] = rice_resp
+        page.fill("input[name='N']", "80")
+        page.fill("input[name='P']", "48")
+        page.fill("input[name='K']", "38")
+        page.fill("input[name='ph']", "6.4")
+
+        page.click("button:has-text('Recommend Best Crops')")
+        page.wait_for_timeout(1000)
+        page.wait_for_selector(".result-crop-big", timeout=10000)
+
+        crop_b = page.locator(".result-crop-big").inner_text()
+        assert "rice" in crop_b.lower(), f"Expected Rice in Case B, got: {crop_b}"
+
+        # Case B: The provenance banner must not exist in the rendered DOM
+        assert banner.count() == 0, f"Case B: data-testid='provenance-banner' must not exist in DOM, count is {banner.count()}"
+
+        screenshot_case_b = os.path.join(ARTIFACT_DIR, "step_f1_rice_no_provenance_banner.png")
+        page.screenshot(path=screenshot_case_b)
+        assert os.path.exists(screenshot_case_b)
 
         browser.close()

@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 
 from app.services.weather_service import get_weather_data
+from app.services.weather_lstm_service import weather_lstm_engine
 
 weather_bp = Blueprint("weather", __name__)
 
@@ -36,4 +37,33 @@ def fetch_weather():
             ), 400
 
     weather = get_weather_data(city, lat=lat_val, lon=lon_val)
+
+    # Attach Deep Bi-LSTM Weather Forecast
+    resolved_lat = weather.get("latitude", lat_val or 18.5204)
+    resolved_lon = weather.get("longitude", lon_val or 73.8567)
+    try:
+        lstm_fc = weather_lstm_engine.predict_7day_forecast(lat=resolved_lat, lon=resolved_lon)
+        if lstm_fc:
+            weather["lstm_forecast"] = lstm_fc
+    except Exception as e:
+        print(f"⚠️ Failed to attach LSTM weather forecast: {e}")
+
     return jsonify({"success": True, "data": weather}), 200
+
+
+@weather_bp.route("/api/weather/lstm-forecast", methods=["GET"])
+def fetch_weather_lstm_only():
+    """Dedicated endpoint returning 7-day weather predictions from Deep Bi-LSTM model."""
+    lat = request.args.get("lat", 18.5204)
+    lon = request.args.get("lon", 73.8567)
+    try:
+        lat_val = float(lat)
+        lon_val = float(lon)
+    except ValueError:
+        return jsonify({"success": False, "error": "Invalid latitude/longitude parameters."}), 400
+
+    forecast_data = weather_lstm_engine.predict_7day_forecast(lat=lat_val, lon=lon_val)
+    if not forecast_data:
+        return jsonify({"success": False, "error": "Weather LSTM model is not loaded."}), 503
+
+    return jsonify({"success": True, "data": forecast_data}), 200

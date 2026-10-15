@@ -1281,13 +1281,22 @@ class MLService:
 
             profile = SOIL_PROFILES.get(pred_class, SOIL_PROFILES["Loamy"])
 
+            ref_note = (
+                "Static educational reference values only. Actual N, P, K, and pH require "
+                "laboratory testing or reliable soil-test data; they cannot be determined as exact "
+                "measured values from the photograph alone."
+            )
+
             return {
                 "soil_type": pred_class,
                 "confidence": confidence,
                 "is_low_confidence": confidence < 70.0,
                 "confidence_warning": "Low confidence. Please get a soil test done." if confidence < 70.0 else None,
                 "profile": profile,
+                # Deprecated alias: consumers should migrate to demo_reference_values_not_measured
                 "estimated_properties": profile["estimated_properties"],
+                "demo_reference_values_not_measured": profile["estimated_properties"],
+                "note": ref_note,
                 "suitable_crops": profile["suitable_crops"],
                 "class_probabilities": class_breakdown,
             }
@@ -1406,13 +1415,34 @@ class MLService:
         if area_ha <= 0:
             raise ValueError("Cultivated farm area must be positive and greater than 0.")
 
-        stage = str(data.get("growth_stage", "flowering")).strip().lower()
+        crop_info = crops_dict[raw_crop]
+        kc_table = crop_info.get("kc", {})
+        supported_stages = list(kc_table.keys())
+
+        raw_stage_input = data.get("growth_stage")
+        if raw_stage_input is None or str(raw_stage_input).strip() == "":
+            stage = "vegetative"
+            growth_stage_source = "default_assumed"
+            growth_stage_warning = (
+                "Growth stage was not supplied; vegetative stage was assumed by default. "
+                "The resulting irrigation estimate may differ from the crop's actual water requirement."
+            )
+        else:
+            stage_normalized = str(raw_stage_input).strip().lower()
+            if stage_normalized not in kc_table:
+                stages_str = ", ".join(sorted(supported_stages))
+                raise ValueError(
+                    f"Invalid growth_stage '{raw_stage_input}'. "
+                    f"Supported growth stages for {crop_info.get('name', raw_crop)}: {stages_str}"
+                )
+            stage = stage_normalized
+            growth_stage_source = "user_provided"
+            growth_stage_warning = None
+
         soil_type = str(data.get("soil_type", "Loamy")).strip().capitalize()
         rainfall = max(0.0, float(data.get("rainfall", 0.0)))
 
-        crop_info = crops_dict[raw_crop]
-        kc_table = crop_info.get("kc", {})
-        kc_val = float(kc_table.get(stage, kc_table.get("flowering", 1.0)))
+        kc_val = float(kc_table.get(stage, 1.0))
         kc_source = crop_info.get("source", "FAO-56")
 
         # 1. Determine ET0 and Method Attribution
@@ -1606,6 +1636,8 @@ class MLService:
             "crop": raw_crop.capitalize(),
             "crop_name": crop_info.get("name", raw_crop.capitalize()),
             "growth_stage": stage.capitalize(),
+            "growth_stage_source": growth_stage_source,
+            "warning": growth_stage_warning,
             "soil_type": soil_type,
             "area_hectares": area_ha,
             "area_acres": round(area_ha * 2.47105, 2),

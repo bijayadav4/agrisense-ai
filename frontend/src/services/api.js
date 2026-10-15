@@ -63,7 +63,19 @@ export const getWeatherData = async (location = 'New Delhi', lat = null, lon = n
   return response.data;
 };
 
+// 2b. Deep Bi-LSTM Weather Forecasting Service
+export const getWeatherLstmForecast = async (lat = 18.5204, lon = 73.8567) => {
+  try {
+    const response = await api.get(`/api/weather/lstm-forecast?lat=${lat}&lon=${lon}`);
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch LSTM forecast:', error);
+    return null;
+  }
+};
+
 export const clearPredictionCaches = () => {
+
   weatherCache.clear();
   cropCache.clear();
   fertilizerCache.clear();

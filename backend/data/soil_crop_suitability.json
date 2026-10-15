@@ -1,0 +1,32 @@
+{
+  "Black": {
+    "soil_name": "Black Soil (Regur)",
+    "suitable_crops": ["Cotton", "Wheat", "Sugarcane", "Gram", "Soybean", "Jowar", "Sunflower"],
+    "general_guidance": "High clay content with deep cracking and high moisture retention. Well suited for cotton and rabi crops. Requires controlled drainage to prevent waterlogging.",
+    "source": "UNVERIFIED"
+  },
+  "Red": {
+    "soil_name": "Red Soil",
+    "suitable_crops": ["Groundnut", "Millets (Ragi, Bajra)", "Pulses", "Tobacco", "Potato", "Oilseeds"],
+    "general_guidance": "Porous and friable with high aeration. Lower in natural organic matter, nitrogen, and phosphorus; responds exceptionally well to organic compost and balanced NPK.",
+    "source": "UNVERIFIED"
+  },
+  "Sandy": {
+    "soil_name": "Sandy Soil",
+    "suitable_crops": ["Watermelon", "Muskmelon", "Groundnut", "Gram", "Bajra", "Mothbeans"],
+    "general_guidance": "High drainage rate and low water holding capacity. Quick to warm up in summer. Drip irrigation and split fertilizer doses are recommended to avoid leaching.",
+    "source": "UNVERIFIED"
+  },
+  "Clayey": {
+    "soil_name": "Clayey Soil",
+    "suitable_crops": ["Rice (Paddy)", "Wheat", "Gram", "Jute", "Sugarcane"],
+    "general_guidance": "Dense heavy soil with high nutrient and water holding capacity. Excellent for submerged paddy wetlands; requires careful tillage when moisture is optimal.",
+    "source": "UNVERIFIED"
+  },
+  "Loamy": {
+    "soil_name": "Loamy Soil",
+    "suitable_crops": ["Wheat", "Sugarcane", "Cotton", "Jute", "Pulses", "Vegetables", "Maize"],
+    "general_guidance": "Ideal balanced agricultural soil with good drainage, aeration, and moisture retention. Highly versatile for multi-crop intensive rotations.",
+    "source": "UNVERIFIED"
+  }
+}

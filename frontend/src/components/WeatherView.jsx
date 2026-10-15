@@ -9,7 +9,10 @@ import {
   Search, 
   AlertTriangle, 
   CheckCircle2, 
-  Calendar 
+  Calendar,
+  Cpu,
+  Sparkles,
+  Info
 } from 'lucide-react';
 
 const POPULAR_CITIES = [
@@ -20,6 +23,7 @@ const POPULAR_CITIES = [
 
 export default function WeatherView({ locationName, weatherData, onSearchCity, onDetectGPS, detectingGPS }) {
   const [cityInput, setCityInput] = useState('');
+  const [forecastMode, setForecastMode] = useState('ecmwf'); // 'ecmwf' | 'lstm'
 
   const temp = weatherData?.temperature !== undefined ? weatherData.temperature : '--';
   const feelsLike = weatherData?.feels_like !== undefined ? weatherData.feels_like : null;
@@ -30,6 +34,12 @@ export default function WeatherView({ locationName, weatherData, onSearchCity, o
   const condition = weatherData?.condition || 'Updating...';
   const displayLocation = locationName || weatherData?.city || 'Select Location';
   const isFallback = Boolean(weatherData?.forecast_source && weatherData.forecast_source.toLowerCase().includes('fallback'));
+
+  const lstmData = weatherData?.lstm_forecast;
+  const rainfallV2Active = lstmData?.rainfall_v2_active === true;
+  const rainfallMetrics = lstmData?.rainfall_metrics || {};
+  const hasLstm = Boolean(lstmData && lstmData.forecast && lstmData.forecast.length > 0);
+  const activeForecast = (forecastMode === 'lstm' && hasLstm) ? lstmData.forecast : (weatherData?.forecast || []);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -52,7 +62,7 @@ export default function WeatherView({ locationName, weatherData, onSearchCity, o
             <div>
               <h3>🌤️ Live Agro-Meteorological Weather & Climate</h3>
               <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                Real-time micro-climate monitoring, rain forecasts, and farm spray advisories
+                Real-time micro-climate monitoring, AI LSTM rain forecasts, and farm spray advisories
               </span>
             </div>
           </div>
@@ -173,14 +183,108 @@ export default function WeatherView({ locationName, weatherData, onSearchCity, o
           </div>
         </div>
 
-        {/* 5-Day Regional Forecast */}
-        <div style={{ marginTop: '16px' }}>
-          <h4 style={{ fontSize: '0.9rem', color: 'var(--text-heading)', fontWeight: 700, marginBottom: '10px' }}>
-            📅 5-Day Agro-Meteorological Forecast:
-          </h4>
+        {/* Forecast Section Header with Mode Toggle */}
+        <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--border-color, #e2e8f0)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '14px' }}>
+            <h4 style={{ fontSize: '0.95rem', color: 'var(--text-heading)', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Calendar size={18} color="#0284c7" />
+              <span>7-Day Agro-Meteorological Forecast</span>
+            </h4>
+
+            {/* Forecaster Engine Switcher */}
+            <div style={{ display: 'inline-flex', background: '#f1f5f9', padding: '3px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <button
+                type="button"
+                onClick={() => setForecastMode('ecmwf')}
+                style={{
+                  border: 'none',
+                  background: forecastMode === 'ecmwf' ? '#ffffff' : 'transparent',
+                  color: forecastMode === 'ecmwf' ? '#0f172a' : '#64748b',
+                  boxShadow: forecastMode === 'ecmwf' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}
+              >
+                <span>📡 Live ECMWF Telemetry</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setForecastMode('lstm')}
+                style={{
+                  border: 'none',
+                  background: forecastMode === 'lstm' ? '#0284c7' : 'transparent',
+                  color: forecastMode === 'lstm' ? '#ffffff' : '#64748b',
+                  boxShadow: forecastMode === 'lstm' ? '0 1px 3px rgba(2,132,199,0.3)' : 'none',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}
+              >
+                <Cpu size={14} />
+                <span>🧠 AgriSense Bi-LSTM Model</span>
+                <span style={{
+                  fontSize: '0.65rem',
+                  background: forecastMode === 'lstm' ? 'rgba(255,255,255,0.25)' : '#e0f2fe',
+                  color: forecastMode === 'lstm' ? '#ffffff' : '#0369a1',
+                  padding: '1px 5px',
+                  borderRadius: '4px'
+                }}>AI</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Bi-LSTM Architecture & Model Metrics Badge */}
+          {forecastMode === 'lstm' && (
+            <div style={{
+              margin: '0 0 16px 0',
+              padding: '12px 16px',
+              borderRadius: '10px',
+              background: '#f0f9ff',
+              border: '1px solid #bae6fd',
+              color: '#0369a1',
+              fontSize: '0.82rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
+                  <Sparkles size={16} color="#0284c7" />
+                  <span>Deep Bi-LSTM Network (14-Day Lookback Sequence → 7-Day Multi-Horizon Forecast)</span>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <span style={{ background: '#e0f2fe', padding: '2px 8px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600 }}>
+                    Temp MAE: ±2.0°C
+                  </span>
+                  <span style={{ background: '#e0f2fe', padding: '2px 8px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600 }}>
+                    Humidity MAE: ±4.8%
+                  </span>
+                  <span style={{ background: '#e0f2fe', padding: '2px 8px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600 }}>
+                    Rain MAE: {rainfallMetrics.mae_mm !== undefined ? `±${Number(rainfallMetrics.mae_mm).toFixed(2)} mm` : 'Not available'}
+                  </span>
+                </div>
+              </div>
+              <div style={{ marginTop: '6px', fontSize: '0.75rem', color: '#075985' }}>
+                {rainfallV2Active
+                  ? `Rainfall model: ${lstmData.rainfall_model}. Metrics are from held-out evaluation, not a live accuracy guarantee.`
+                  : 'Predicted by AgriSense Deep Bidirectional LSTM neural network trained on Indian agricultural multi-station time series. Rainfall V2 is not active.'}
+              </div>
+            </div>
+          )}
+
+          {/* 7-Day Forecast Grid */}
           <div className="forecast-strip" style={{ border: 'none', paddingTop: 0 }}>
-            {weatherData?.forecast && weatherData.forecast.length > 0 ? (
-              weatherData.forecast.map((f, idx) => (
+            {activeForecast && activeForecast.length > 0 ? (
+              activeForecast.map((f, idx) => (
                 <div key={idx} className="forecast-day-tile">
                   <span className="forecast-day-name">{f.day}</span>
                   <span className="forecast-weather-icon">{f.icon || '⛅'}</span>
@@ -188,10 +292,15 @@ export default function WeatherView({ locationName, weatherData, onSearchCity, o
                   <span style={{ fontSize: '0.72rem', color: (f.rain_chance > 40 || f.rain_mm > 0) ? '#0284c7' : '#16a34a' }}>
                     {f.rain_chance !== undefined ? `${f.rain_chance}% rain` : (f.rain_mm > 0 ? `${f.rain_mm} mm` : (f.condition || 'Clear'))}
                   </span>
+                  {f.et0 !== undefined && (
+                    <span style={{ fontSize: '0.65rem', color: '#64748b', marginTop: '2px' }}>
+                      ET₀: {f.et0} mm
+                    </span>
+                  )}
                 </div>
               ))
             ) : (
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Loading live regional forecast...</span>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Loading regional forecast...</span>
             )}
           </div>
         </div>

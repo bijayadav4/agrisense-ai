@@ -1,0 +1,22 @@
+{
+  "temp_max": {
+    "MAE": 2.4,
+    "RMSE": 2.8208
+  },
+  "temp_min": {
+    "MAE": 4.4495,
+    "RMSE": 4.7624
+  },
+  "humidity": {
+    "MAE": 7.7671,
+    "RMSE": 9.6323
+  },
+  "precipitation": {
+    "MAE": 4.6583,
+    "RMSE": 10.2536
+  },
+  "wind_speed": {
+    "MAE": 3.53,
+    "RMSE": 4.3976
+  }
+}

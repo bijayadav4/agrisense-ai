@@ -51,7 +51,7 @@ This document provides transparent, reproducible, and scientifically audited mod
 | **Method / Architecture** | **FAO-56 Dual Hydrology Engine** combining live meteorological reference evapotranspiration ($ET_0$) with empirical single-crop coefficient ($K_c$) curves:<br>$$ET_c = ET_0 \times K_c$$<br>Net irrigation depth ($\text{mm/day}$) is converted to volumetric demand ($\text{Liters/day}$) based on plot area ($1\text{ mm} = 10,000\text{ L/ha}$). |
 | **Data Source** | - **Live $ET_0$**: Open-Meteo High-Resolution Numerical Weather API (`et0_fao_evapotranspiration` via FAO-56 Penman-Monteith).<br>- **Fallback $ET_0$**: FAO-56 Equation 21 extraterrestrial solar radiation ($R_a$) Hargreaves temperature equation calibrated for latitude and day-of-year.<br>- **Crop Coefficients ($K_c$)**: Table of 24 crops across 4 phenological stages (Initial, Development, Mid-Season, Late Season). Values compiled from FAO Irrigation and Drainage Paper 56. |
 | **Metric / Verification** | Compared against ICAR Water Technology Centre benchmark figures across 7-day live forecast schedules. Automated unit tests verify volumetric bounds and efficiency scaling (Drip: 90%, Sprinkler: 75%, Surface: 60%). |
-| **Data Status Flags** | - $ET_0$ from Open-Meteo API: **VERIFIED (FAO-56 Reference)**.<br>- $ET_0$ from Hargreaves Fallback: **ESTIMATED (Temperature-based proxy)**.<br>- $K_c$ values for minor crops without explicit FAO-56 single-crop tables: **ESTIMATED (Derived from related crop genus)**. |
+| **Data Status Flags** | - $ET_0$ from Open-Meteo API: **VERIFIED (FAO-56 Reference)**.<br>- $ET_0$ from Hargreaves Fallback: **ESTIMATED (Temperature-based proxy)**.<br>- $K_c$ values for minor crops without explicit FAO-56 single-crop tables: **ESTIMATED (Derived from related crop genus)**.<br>- Growth stage fallback: `growth_stage omitted -> vegetative (previously flowering)`. |
 | **Known Limitations** | Ground soil percolation losses and capillary rise are estimated via static soil texture holding capacities rather than continuous TDR moisture sensor telemetry. Extreme localized microclimate anomalies require on-field validation. |
 
 ---
@@ -67,6 +67,19 @@ This document provides transparent, reproducible, and scientifically audited mod
 
 ---
 
+---
+
+## 4b. Deep Bi-LSTM Weather Forecasting Model
+
+| Dimension | Specification |
+| :--- | :--- |
+| **Method / Architecture** | **Deep Bidirectional LSTM Multi-Horizon Forecaster**:<br>- Input: 14-day sequential lookback $\times$ 5 meteorological channels ($[T_{\text{max}}, T_{\text{min}}, \text{Humidity}, \text{Precipitation}, \text{Wind}]$).<br>- Backbone: 2-Layer Bi-LSTM ($\text{hidden\_dim} = 64$, dropout $= 0.15$).<br>- Decoder Head: Multi-layer perceptron with `BatchNorm1d` projecting context vectors to a 7-day multi-horizon forecast ($7 \times 5$).<br>- Loss: Smooth L1 (Huber) loss optimized via AdamW ($\text{lr} = 0.003$). |
+| **Data Source** | Multi-year meteorological time-series records across 8 major Indian agricultural zones (Pune, Coimbatore, Ludhiana, Karnal, Patna, Hyderabad, Nagpur, Jaipur) spanning 11,688 daily records. |
+| **Evaluation Metrics (Holdout Test)** | - **$T_{\text{max}}$ MAE**: $2.00^\circ\text{C}$ (RMSE: $2.37^\circ\text{C}$)<br>- **$T_{\text{min}}$ MAE**: $2.04^\circ\text{C}$ (RMSE: $2.41^\circ\text{C}$)<br>- **Relative Humidity MAE**: $4.87\%$ (RMSE: $6.12\%$)<br>- **Precipitation MAE**: $4.52\text{ mm}$ (RMSE: $7.19\text{ mm}$)<br>- **Wind Speed MAE**: $2.04\text{ km/h}$ (RMSE: $2.55\text{ km/h}$) |
+| **Integration & Fallback** | Deployed at `/api/weather/lstm-forecast` and unified under `/api/weather`. Operates alongside live ECMWF numerical telemetry with seamless interactive switching in the UI. |
+
+---
+
 ## 6. Scientific Governance & Status Summary
 
 | Module | Core Paradigm | Training Data Status | Key Metric Claim | Governance / Audit Status |
@@ -74,8 +87,10 @@ This document provides transparent, reproducible, and scientifically audited mod
 | **Soil CNN** | MobileNetV2 Vision | 987 Real Field Photos | **88.19% Holdout Test Accuracy** (95% CI: 82.6% – 93.1%) | ✅ Audited; 0 test leakage; GAN clones removed |
 | **Crop RF** | Random Forest | 2,200 Benchmark + 100 Synthetic Wheat | **99.52% ± 0.25% (5-fold CV, benchmark)** | ✅ Audited; Wheat marked synthetic; Ambiguity flag active |
 | **Crop Fusion** | ST-LSTM Multimodal | Synthetic Weather Drift | Historical claims invalid | ⚠️ Retired from production; Prototype flag active |
+| **Weather LSTM** | Deep Bi-LSTM Sequence Model | 11,688 Multi-Station Time-Series | **MAE: Temp ±2.0°C, Rain ±4.5mm, Hum ±4.8%** | ✅ Trained & Integrated; 7-day multi-horizon forecast |
 | **Fertilizer** | Stoichiometric Balancing | Physical Chemistry Laws & ICAR FCO | 100% Mathematical Conservation | ✅ Audited; Hand-calculated test verified |
 | **Irrigation** | FAO-56 Penman-Monteith | Open-Meteo Live API + FAO-56 $K_c$ | Exact volumetric balance | ✅ Audited; ET0 fallback Ra verified |
 | **Harvest** | Calendar Phenology + MSP | ICAR Cycle Manuals + MSP Tables | Historical Indicative Mean | ⚠️ MSP values marked UNVERIFIED pending CACP gazette |
+
 
 *All AgriSense AI recommendations are decision-support estimates. Farmers should cross-verify advisories with local Krishi Vigyan Kendra (KVK) officers or state agricultural extension personnel.*

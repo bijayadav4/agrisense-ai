@@ -894,6 +894,32 @@ export default function CropView({ activeLocation, weatherData, soilData, onUpda
             </div>
           )}
 
+          {/* Benchmark Data Provenance Advisory Banner (e.g. Synthetic ICAR Wheat extension) */}
+          {Boolean(recommendation.provenance_note && typeof recommendation.provenance_note === 'string' && recommendation.provenance_note.trim()) && (
+            <div
+              data-testid="provenance-banner"
+              style={{
+                margin: '10px 0',
+                padding: '10px 14px',
+                borderRadius: '8px',
+                background: '#fffbeb',
+                border: '1px solid #fde68a',
+                color: '#92400e',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '10px'
+              }}
+            >
+              <Info size={18} style={{ color: '#d97706', flexShrink: 0, marginTop: '2px' }} />
+              <div style={{ fontSize: '0.82rem' }}>
+                <strong style={{ display: 'block', marginBottom: '2px', color: '#b45309' }}>
+                  ℹ️ Benchmark Data Provenance Notice
+                </strong>
+                <span>{recommendation.provenance_note}</span>
+              </div>
+            </div>
+          )}
+
           {/* Top-3 Crops Probability Distribution */}
           {recommendation.top_crops && recommendation.top_crops.length > 0 && (
             <div style={{ marginTop: '12px', marginBottom: '12px' }}>

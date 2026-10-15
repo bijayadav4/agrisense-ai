@@ -30,6 +30,7 @@ def create_app():
     from app.routes.predict_routes import predict_bp
     from app.routes.weather_routes import weather_bp
     from app.services.ml_service import ml_engine
+    from app.services.weather_lstm_service import weather_lstm_engine
 
     # Register Blueprints
     app.register_blueprint(predict_bp)
@@ -50,6 +51,7 @@ def create_app():
                     "fertilizer_random_forest": ml_engine.fert_model is not None,
                     "soil_cnn_vision": ml_engine.soil_model is not None,
                     "fusion_lstm_prototype": ml_engine.fusion_model is not None,
+                    "weather_forecasting_lstm": weather_lstm_engine.model is not None,
                 },
                 "features": [
                     "Crop Recommendation & Soil Analysis",

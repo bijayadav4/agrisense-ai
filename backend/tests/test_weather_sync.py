@@ -19,6 +19,7 @@ import time
 import subprocess
 import urllib.request
 import unittest
+from unittest.mock import patch
 import pytest
 from playwright.sync_api import sync_playwright
 
@@ -38,19 +39,29 @@ class BackendWeatherLocationSyncTestCase(unittest.TestCase):
         Verify Hyderabad and Bengaluru return accurate coordinates and city names
         in fallback mode, never defaulting to Coimbatore or None.
         """
-        hyd = get_weather_data("Hyderabad")
-        self.assertEqual(hyd["city"], "Hyderabad, Telangana")
-        self.assertAlmostEqual(hyd["latitude"], 17.3850, places=3)
-        self.assertAlmostEqual(hyd["longitude"], 78.4867, places=3)
-        self.assertIn("Fallback", hyd["forecast_source"])
-        self.assertNotEqual(hyd["city"], "Coimbatore, Tamil Nadu")
+        from requests import RequestException
 
-        bgl = get_weather_data("Bengaluru")
-        self.assertEqual(bgl["city"], "Bengaluru, Karnataka")
-        self.assertAlmostEqual(bgl["latitude"], 12.9716, places=3)
-        self.assertAlmostEqual(bgl["longitude"], 77.5946, places=3)
-        self.assertIn("Fallback", bgl["forecast_source"])
-        self.assertNotEqual(bgl["city"], "Coimbatore, Tamil Nadu")
+        real_get = __import__("app.services.weather_service", fromlist=["requests"]).requests.get
+
+        def fail_open_meteo_forecast(url, *args, **kwargs):
+            if "api.open-meteo.com/v1/forecast" in str(url):
+                raise RequestException("Simulated offline mode for fallback test")
+            return real_get(url, *args, **kwargs)
+
+        with patch("app.services.weather_service.requests.get", side_effect=fail_open_meteo_forecast):
+            hyd = get_weather_data("Hyderabad")
+            self.assertEqual(hyd["city"], "Hyderabad, Telangana")
+            self.assertAlmostEqual(hyd["latitude"], 17.3850, places=3)
+            self.assertAlmostEqual(hyd["longitude"], 78.4867, places=3)
+            self.assertIn("Fallback", hyd["forecast_source"])
+            self.assertNotEqual(hyd["city"], "Coimbatore, Tamil Nadu")
+
+            bgl = get_weather_data("Bengaluru")
+            self.assertEqual(bgl["city"], "Bengaluru, Karnataka")
+            self.assertAlmostEqual(bgl["latitude"], 12.9716, places=3)
+            self.assertAlmostEqual(bgl["longitude"], 77.5946, places=3)
+            self.assertIn("Fallback", bgl["forecast_source"])
+            self.assertNotEqual(bgl["city"], "Coimbatore, Tamil Nadu")
 
 
 def wait_for_url(url, timeout=25):
@@ -114,8 +125,35 @@ def test_playwright_weather_location_change_and_race_condition(weather_servers):
         context = browser.new_context(viewport={"width": 1440, "height": 900})
         page = context.new_page()
 
-        # Track intercepted weather requests
+        # Keep this UI test deterministic: mock only the main weather endpoint.
         weather_urls = []
+        def mock_weather(route):
+            url = route.request.url
+            weather_urls.append(url)
+            from urllib.parse import parse_qs, urlparse
+            params = parse_qs(urlparse(url).query)
+            city = params.get("location", ["New Delhi"])[0]
+            # Delay Hyderabad slightly to exercise stale-response protection.
+            import time
+            if "Hyderabad" in city:
+                time.sleep(0.4)
+            route.fulfill(status=200, content_type="application/json", body=__import__("json").dumps({
+                "success": True,
+                "data": {
+                    "city": city,
+                    "temperature": 28,
+                    "feels_like": 30,
+                    "humidity": 65,
+                    "rainfall": 0.0,
+                    "precipitation_chance": 15,
+                    "wind_speed": 10,
+                    "condition": "Partly Cloudy",
+                    "forecast_source": "Fallback (Agro-climatic Regional Baseline)",
+                    "forecast": []
+                }
+            }))
+
+        page.route("**/api/weather?*", mock_weather)
         page.on("request", lambda req: weather_urls.append(req.url) if "/api/weather" in req.url else None)
 
         # Step 1: Open app and navigate to Weather tab

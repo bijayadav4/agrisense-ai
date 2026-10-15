@@ -1,0 +1,254 @@
+"""
+AgriSense AI - Deep Bi-LSTM Weather Forecasting Service
+======================================================
+Loads the pre-trained Bidirectional LSTM multi-step meteorological network
+and generates 7-day agricultural forecasts from recent 14-day telemetry.
+"""
+
+import os
+import json
+import joblib
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+import numpy as np
+import requests
+import torch
+import torch.nn as nn
+
+from app.config import Config
+from app.services.weather_service import (
+    calculate_hargreaves_et0,
+    get_wmo_weather_info,
+)
+
+FEATURE_COLUMNS = ["temp_max", "temp_min", "humidity", "precipitation", "wind_speed"]
+
+
+class WeatherForecastingLSTM(nn.Module):
+    """
+    Bidirectional Multi-Layer LSTM with Deep Residual Projection
+    Matching the trained architecture in ml_models/train_weather_lstm.py.
+    """
+    def __init__(self, in_features=5, hidden_dim=64, num_layers=2, forecast_days=7, dropout=0.15):
+        super().__init__()
+        self.in_features = in_features
+        self.forecast_days = forecast_days
+        self.hidden_dim = hidden_dim
+
+        self.lstm = nn.LSTM(
+            input_size=in_features,
+            hidden_size=hidden_dim,
+            num_layers=num_layers,
+            batch_first=True,
+            bidirectional=True,
+            dropout=dropout if num_layers > 1 else 0.0,
+        )
+
+        self.head = nn.Sequential(
+            nn.Linear(hidden_dim * 2, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(128, forecast_days * in_features),
+        )
+
+    def forward(self, x):
+        out, (hn, _) = self.lstm(x)
+        seq_context = torch.cat([hn[-2], hn[-1]], dim=1)
+        pred = self.head(seq_context)
+        return pred.view(-1, self.forecast_days, self.in_features)
+
+
+class WeatherLSTMInferenceEngine:
+    def __init__(self):
+        self.model = None
+        self.scaler = None
+        self.metrics = {}
+        self.device = torch.device("cpu")
+        self._load_artifacts()
+
+    def _load_artifacts(self):
+        model_path = getattr(Config, "WEATHER_LSTM_MODEL_PATH", None)
+        scaler_path = getattr(Config, "WEATHER_LSTM_SCALER_PATH", None)
+
+        if not model_path or not os.path.exists(model_path):
+            print(f"⚠️ Weather LSTM model not found at {model_path}")
+            return
+
+        try:
+            self.model = WeatherForecastingLSTM(
+                in_features=5, hidden_dim=64, num_layers=2, forecast_days=7, dropout=0.0
+            )
+            state_dict = torch.load(model_path, map_location=self.device)
+            self.model.load_state_dict(state_dict)
+            self.model.eval()
+
+            if scaler_path and os.path.exists(scaler_path):
+                self.scaler = joblib.load(scaler_path)
+
+            metrics_path = os.path.join(os.path.dirname(model_path), "weather_lstm_metrics.json")
+            if os.path.exists(metrics_path):
+                with open(metrics_path, "r") as f:
+                    self.metrics = json.load(f)
+
+            print("✅ AgriSense Weather Forecasting Bi-LSTM Model loaded successfully.")
+        except Exception as e:
+            print(f"⚠️ Error loading Weather LSTM: {e}")
+            self.model = None
+
+    def fetch_historical_14days_sequence(self, lat, lon):
+        """
+        Fetches the past 14 days of real agro-meteorological observations from Open-Meteo.
+        Falls back to seasonal pattern if offline.
+        """
+        try:
+            w_url = (
+                f"https://api.open-meteo.com/v1/forecast?"
+                f"latitude={lat}&longitude={lon}&"
+                f"past_days=14&forecast_days=1&"
+                f"daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_mean,precipitation_sum,wind_speed_10m_max&"
+                f"timezone=auto"
+            )
+            resp = requests.get(w_url, timeout=3.0)
+            if resp.status_code == 200:
+                d = resp.json().get("daily", {})
+                t_max = d.get("temperature_2m_max", [])[:14]
+                t_min = d.get("temperature_2m_min", [])[:14]
+                hum = d.get("relative_humidity_2m_mean", [])[:14]
+                precip = d.get("precipitation_sum", [])[:14]
+                wind = d.get("wind_speed_10m_max", [])[:14]
+
+                if len(t_max) == 14:
+                    seq = []
+                    for i in range(14):
+                        seq.append([
+                            float(t_max[i] or 28.0),
+                            float(t_min[i] or 18.0),
+                            float(hum[i] or 65.0),
+                            float(precip[i] or 0.0),
+                            float(wind[i] or 10.0),
+                        ])
+                    return np.array(seq, dtype=np.float32)
+        except Exception as e:
+            print(f"⚠️ Historical 14-day telemetry fetch warning: {e}")
+
+        # Physical fallback sequence (last 14 days based on current regional norm)
+        np.random.seed(int(lat * 10 + lon * 10) % 1000)
+        base_tmax = 30.0
+        base_tmin = 20.0
+        seq = []
+        for i in range(14):
+            day_noise = np.random.normal(0, 0.8)
+            seq.append([
+                base_tmax + day_noise,
+                base_tmin + day_noise,
+                float(np.clip(62.0 + np.random.normal(0, 3.0), 30, 90)),
+                float(max(0.0, np.random.exponential(1.5) if np.random.rand() < 0.2 else 0.0)),
+                float(np.clip(9.0 + np.random.normal(0, 1.5), 3, 25)),
+            ])
+        return np.array(seq, dtype=np.float32)
+
+    def predict_7day_forecast(self, lat=18.5204, lon=73.8567):
+        """
+        Performs forward inference with the Bi-LSTM model to forecast the next 7 days.
+        """
+        if self.model is None or self.scaler is None:
+            return None
+
+        # 1. Fetch 14-day lookback sequence
+        raw_14days = self.fetch_historical_14days_sequence(lat, lon)  # [14, 5]
+
+        # 2. Scale features
+        scaled_14days = self.scaler.transform(raw_14days)  # [14, 5]
+
+        # 3. Model Inference
+        x_tensor = torch.from_numpy(scaled_14days).unsqueeze(0).to(self.device)  # [1, 14, 5]
+        with torch.no_grad():
+            preds_scaled = self.model(x_tensor).squeeze(0).cpu().numpy()  # [7, 5]
+
+        # 4. Denormalize predictions
+        preds_unscaled = self.scaler.inverse_transform(preds_scaled)  # [7, 5]
+
+        # 5. Build structured 7-day forecast
+        try:
+            today_dt = datetime.now(ZoneInfo("Asia/Kolkata"))
+        except Exception:
+            today_dt = datetime.now()
+
+        forecast_list = []
+        for offset in range(7):
+            cur_dt = today_dt + timedelta(days=offset)
+            d_str = cur_dt.strftime("%Y-%m-%d")
+            day_label = "Today" if offset == 0 else cur_dt.strftime("%a")
+
+            t_max = round(float(preds_unscaled[offset, 0]), 1)
+            t_min = round(float(preds_unscaled[offset, 1]), 1)
+            # Guarantee physical constraint t_max >= t_min
+            if t_max < t_min:
+                t_max, t_min = t_min + 2.0, t_max
+
+            humidity = round(float(np.clip(preds_unscaled[offset, 2], 15.0, 99.0)), 1)
+            rain_mm = round(float(max(0.0, preds_unscaled[offset, 3])), 1)
+            wind_kmh = round(float(max(1.0, preds_unscaled[offset, 4])), 1)
+
+            # Rain probability heuristic from predicted precipitation
+            if rain_mm > 15.0:
+                rain_chance = min(95, int(65 + rain_mm * 1.5))
+                condition = "Heavy Rain"
+                icon = "🌧️"
+            elif rain_mm > 4.0:
+                rain_chance = min(85, int(45 + rain_mm * 3.5))
+                condition = "Rain Showers"
+                icon = "🌦️"
+            elif rain_mm > 0.5:
+                rain_chance = min(60, int(30 + rain_mm * 10))
+                condition = "Light Drizzle"
+                icon = "🌦️"
+            elif humidity > 78.0:
+                rain_chance = 25
+                condition = "Overcast Clouds"
+                icon = "☁️"
+            elif humidity > 60.0:
+                rain_chance = 10
+                condition = "Partly Cloudy"
+                icon = "⛅"
+            else:
+                rain_chance = 0
+                condition = "Clear Sky"
+                icon = "☀️"
+
+            # Compute Hargreaves Reference Evapotranspiration ET0
+            t_mean = (t_max + t_min) / 2.0
+            et0_val = calculate_hargreaves_et0(
+                tmean=t_mean,
+                tmax=t_max,
+                tmin=t_min,
+                lat=lat,
+                day_of_year=cur_dt.timetuple().tm_yday,
+            )
+
+            forecast_list.append({
+                "day": day_label,
+                "date": d_str,
+                "max_temp": t_max,
+                "min_temp": t_min,
+                "humidity": humidity,
+                "rain_mm": rain_mm,
+                "rain_chance": rain_chance,
+                "wind_speed": wind_kmh,
+                "condition": condition,
+                "icon": icon,
+                "et0": et0_val,
+            })
+
+        return {
+            "model_name": "AgriSense Deep Bi-LSTM Weather Forecaster",
+            "architecture": "2-Layer Bidirectional LSTM (Hidden: 64, Lookback: 14 Days, Horizon: 7 Days)",
+            "is_ai_predicted": True,
+            "metrics": self.metrics,
+            "forecast": forecast_list,
+        }
+
+
+# Global Singleton Instance
+weather_lstm_engine = WeatherLSTMInferenceEngine()

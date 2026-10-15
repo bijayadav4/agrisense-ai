@@ -40,3 +40,12 @@ class Config:
     FUSION_LSTM_MODEL_PATH = os.path.abspath(
         os.path.join(BASE_DIR, "../../ml_models/saved_models/fusion_lstm_model.pth")
     )
+
+    # Weather Forecasting LSTM Model & Scaler
+    WEATHER_LSTM_MODEL_PATH = os.path.abspath(
+        os.path.join(BASE_DIR, "../../ml_models/saved_models/weather_lstm_model.pth")
+    )
+    WEATHER_LSTM_SCALER_PATH = os.path.abspath(
+        os.path.join(BASE_DIR, "../../ml_models/saved_models/weather_lstm_scaler.pkl")
+    )
+

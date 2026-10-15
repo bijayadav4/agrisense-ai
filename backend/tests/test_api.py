@@ -468,6 +468,12 @@ class AgriSenseAPITestCase(unittest.TestCase):
         self.assertIn(data["soil_type"], ["Black", "Clayey", "Loamy", "Red", "Sandy"])
         self.assertGreater(data["confidence"], 0)
         self.assertIn("estimated_properties", data)
+        self.assertIn("demo_reference_values_not_measured", data)
+        self.assertIsInstance(data["demo_reference_values_not_measured"], dict)
+        self.assertIn("N", data["demo_reference_values_not_measured"])
+        self.assertEqual(data["demo_reference_values_not_measured"], data["estimated_properties"])
+        self.assertIn("note", data)
+        self.assertIn("laboratory testing", data["note"].lower())
         self.assertIn("suitable_crops", data)
 
     def test_classify_soil_image_missing_file(self):
@@ -517,6 +523,40 @@ class AgriSenseAPITestCase(unittest.TestCase):
         self.assertIn("weekly_schedule", data)
         self.assertEqual(len(data["weekly_schedule"]), 7)
         self.assertGreater(data["daily_liters"], 0)
+        self.assertEqual(data.get("growth_stage_source"), "user_provided")
+        self.assertIsNone(data.get("warning"))
+
+    def test_irrigation_plan_missing_growth_stage_default_vegetative(self):
+        payload = {
+            "crop": "rice",
+            # growth_stage omitted
+            "area_hectares": 1.0,
+            "rainfall": 0.0,
+            "et0": 5.0,
+        }
+        response = self.client.post("/api/irrigation/plan", json=payload)
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertTrue(data["success"])
+        self.assertEqual(data["growth_stage"].lower(), "vegetative")
+        self.assertEqual(data["growth_stage_source"], "default_assumed")
+        self.assertIsNotNone(data.get("warning"))
+        self.assertIn("vegetative", data["warning"].lower())
+        # For rice: vegetative Kc = 1.15 in kc_table.json -> ETc = 5.0 * 1.15 = 5.75 mm
+        self.assertAlmostEqual(data["crop_coefficient_kc"], 1.15, places=2)
+        self.assertAlmostEqual(data["crop_water_need_mm"], 5.75, places=2)
+
+    def test_irrigation_plan_invalid_growth_stage_returns_400(self):
+        payload = {
+            "crop": "rice",
+            "growth_stage": "invalid_alien_stage",
+            "area_hectares": 1.0,
+        }
+        response = self.client.post("/api/irrigation/plan", json=payload)
+        self.assertEqual(response.status_code, 400)
+        data = response.get_json()
+        self.assertFalse(data["success"])
+        self.assertIn("growth_stage", data["error"].lower())
 
     def test_harvest_prediction_endpoint(self):
         payload = {"crop": "wheat", "sowing_date": "2026-09-01", "area": 2, "area_unit": "acres"}

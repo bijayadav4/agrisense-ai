@@ -1,0 +1,11 @@
+{
+  "threshold": 0.25000000000000006,
+  "classifier_precision": 0.8072289156626506,
+  "classifier_recall": 0.9500275330396476,
+  "classifier_f1": 0.8728261556946816,
+  "mae_mm": 4.218792603183935,
+  "rmse_mm": 8.59629261430825,
+  "baseline_mae_mm": 5.438501333766237,
+  "max_predicted_rain_mm": 29.766748428344727,
+  "test_windows": 1712
+}

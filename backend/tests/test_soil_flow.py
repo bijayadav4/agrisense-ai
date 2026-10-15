@@ -490,11 +490,21 @@ class SoilFlowAuditTestCase(unittest.TestCase):
         self.assertIn("Sowing date not set; harvest date unavailable", text_a)
 
         # Case B: Sowing date today/future
+        from datetime import datetime, timedelta
+        from zoneinfo import ZoneInfo
+        try:
+            today_date = datetime.now(ZoneInfo("Asia/Kolkata")).date()
+        except Exception:
+            today_date = datetime.now().date()
+
+        future_date_str = (today_date + timedelta(days=5)).strftime("%Y-%m-%d")
+        past_date_str = (today_date - timedelta(days=30)).strftime("%Y-%m-%d")
+
         payload_future = {
             "farmer_name": "Test Farmer",
             "location": "Coimbatore, Tamil Nadu",
             "harvest_data": {
-                "sowing_date": "2026-10-10",
+                "sowing_date": future_date_str,
                 "crop_cycle_days": 125,
             },
         }
@@ -503,12 +513,12 @@ class SoilFlowAuditTestCase(unittest.TestCase):
         self.assertIn("Crop cycle: 125 days; harvest on", text_b)
         self.assertIn("(Source: User entered)", text_b)
 
-        # Case C: Sowing date in past (e.g. 2026-08-01, 70 days ago)
+        # Case C: Sowing date in past (30 days ago)
         payload_past = {
             "farmer_name": "Test Farmer",
             "location": "Coimbatore, Tamil Nadu",
             "harvest_data": {
-                "sowing_date": "2026-08-01",
+                "sowing_date": past_date_str,
                 "crop_cycle_days": 125,
             },
         }

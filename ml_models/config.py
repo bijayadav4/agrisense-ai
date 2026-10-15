@@ -43,3 +43,10 @@ SOIL_CLASSES = ["Black", "Clayey", "Loamy", "Red", "Sandy"]
 
 # Spatio-Temporal LSTM & Bottleneck Fusion Model
 FUSION_LSTM_MODEL_PATH = os.path.join(SAVED_MODELS_DIR, "fusion_lstm_model.pth")
+
+# Weather Forecasting LSTM Model
+WEATHER_DATASET_PATH = os.path.join(BASE_DIR, "datasets", "weather_timeseries.csv")
+WEATHER_LSTM_MODEL_PATH = os.path.join(SAVED_MODELS_DIR, "weather_lstm_model.pth")
+WEATHER_LSTM_SCALER_PATH = os.path.join(SAVED_MODELS_DIR, "weather_lstm_scaler.pkl")
+WEATHER_FEATURE_COLUMNS = ["temp_max", "temp_min", "humidity", "precipitation", "wind_speed"]
+
